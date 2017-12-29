@@ -12,7 +12,16 @@
     String sub_s2 = s2.substring(2, 5); // 'uce'
 > String -> char[]
     char[] s2Char = s2.toCharArray(); // 字符串转化为字符数组
-
+> String取值
+    char x = s2.charAt(1); // 'r'
+> String获取索引
+    int index = s2.indexOf('r') // 1
 ## StringBuider主要用法
 > StringBuilder申明
     StringBuilder s3 = new StringBuilder(s2.substring(2, 5));
+> StringBuilder增加
+    s3.append('bill');
+> StringBuilder -> String
+    s3.toString();
+## StringBuffer主要用法
+> 与StringBuilder同
