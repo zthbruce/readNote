@@ -112,7 +112,7 @@
 
 ## 求链表倒数第K个节点
 > 链表和数组有一个非常常用的技巧，快慢指针法
-> 设置两个指针，p1, p2, p2比p1快K步，那么p2到达尾节点时，p1处于倒数第K个节点(最后一个节点为倒数第1个)
+> 设置两个指针，slow, fast, fast比slow快K步，那么fast到达尾节点时，slow处于倒数第K个节点(最后一个节点为倒数第1个)
     public ListNode theKthNode(ListNode head, int k){
         // 边界条件
         if(k < 0 || head == null){
@@ -137,3 +137,220 @@
     }
 
 ## 求链表的中间节点
+> 设置两个指针，slow, fast, fast每次走两步，slow每次走一步，当fast到达尾节点(或者倒数第二个节点)，slow正好处于中间节点（对于奇数个节点来说，中间节点只有一个，正好取之；对于偶数个节点来说，中间节点有两个，取前面那个即可)
+    public ListNode midNode(ListNode head){
+        // 异常情况
+        if(head == null){
+            return head;
+        }
+        // 设置快慢节点初始化
+        ListNode slow = ListNode fast = head;
+        // 条件中，前者针对奇数情况，后者针对偶数情况
+        // 这种条件不是遍历，而是走到最后一个节点(或倒数第一个)即停
+        while(fast.next != null && fast.next.next != null){ 
+            fast = fast.next.next; // 走两步
+            slow = slow.next; // 走一步
+        }
+        return slow; // 返回慢节点
+    }
+
+## 判断链表是否有环
+> 这个原理类似于跑步，跑圈时如果一个速度比较快，一个速度比较慢，那么经过一段时间，速度快的必然会和速度慢的相遇
+> 同上面一样，设置快慢指针，slow, fast, fast每次走两步，slow每次走一步
+    public boolean hasCircle(ListNode head){
+        // 异常判断, 可以归并到主逻辑里
+        //if(head == null){
+        //    return false;
+        // }
+
+        // 设置快慢节点初始化
+        ListNode fast = ListNode slow = head;
+        // 判断是否能遍历完，这是经验，存在node.next的一定要保证node不为空，node.next.next一定要保证node.next不为空
+        while(fast != null && fast.next != null){
+            fast = fast.next.next;
+            slow = slow.next;
+            // 当fast赶上slow时
+            if(fast == slow){
+                return true;
+            }
+        }
+        // 如果到达尾节点，默认返回false
+        return false;
+    }
+
+## 判断是否有环，有环返回环的入口
+> 首先分析一下这道题，可以得出几个结论
+1. 如果存在环，那么快节点fast和慢节点slow必然相遇
+> 可由相对速度的方式理解，相当于慢节点slow不动，fast节点以速度v运动，在环里必然相遇
+2. 如果相遇，必然是在慢节点运动的第一圈
+> 假设slow的速度为v, fast的速度为2*v, slow到达环入口时，fast与slow的距离为s, 环的长度为l, 链表起点到环入口的长度为a,
+fast相对于slow的速度为v, 那么追上slow的时间t = s / v <= l / v;
+故追上时，slow在圈内走的路程为 v * t <= l; 即走的路程小于环长，故必然是在第一圈内就能追上
+(实际上如果路程为环长，那么在入口处就能第一次相遇，说明环长l=a;反过来亦说明当l = a时，两者第一次相遇就在环入口
+    l + a = 2 * v * t; 
+    a = v * t ;
+    => l = a; )
+> 设相遇时slow节点距环口的距离为b, 设slow走了n步，则fast走了2*n步
+    则slow节点走的路程为 a + b = n
+    此时fast节点走的路程为 a + b + k * l = 2*n
+    可知 n = k * l = a + b;
+    故如果此时slow从该相遇点继续走，走n步会继续回到该相遇点
+    而fast以slow的步长从链表节点开始，走n步也会回到该相遇点
+    这种情况只会在入口就相遇的情况下才会满足(如果入口不相遇，那么两者永远不会相遇，因为速度一致)
+> 故结题思路为：
+    从链表头结点开始，fast每次走2步，slow每次走1步，当两者相遇时，则确定链表有环。
+    此时让fast回到链表头结点，每次走1步，当再次相遇时，相遇点即为链表入口。
+> 代码如下:
+    public ListNode getLoopPoint(ListNode head){
+        // 异常判断
+        if(head == null){
+            return null;
+        }
+        // 判断是否有环
+        ListNode fast = ListNode slow = head;
+        //ListNode meetPoint = null;
+        while(fast != null && fast.next != null){
+            fast = fast.next.next; // 走两步
+            slow = slow.next;
+            // 如果两者相遇, 循环结束
+            if(slow == fast){
+                break;
+            }
+        }
+        // 如果已经结束了，而且两者不相等，说明没有环
+        if(slow != fast){
+            return null;
+        }
+        // 确定环入口
+        fast = head; // 将fast重新回到head, 并且每次走一步
+        // 直到相遇为止
+        while(fast != slow){
+            fast = fast.next;
+            slow = slow.next;
+        }
+        return slow;
+    }
+
+
+## 判断链表是否相交(不带环)
+> 首先，什么叫链表相交，对于单链表比较直观的就是Y型，因为链表只能有一个next，所以从相交点之后的节点是两个链表所共有。
+> 解题思路：
+1. 最简单的方法就是双重遍历，时间复杂度为O(N1*N2)
+2. 引入数据结构HashMap，时间复杂度为O(N),空间复杂度为O(N),典型的用空间换取时间的做法,实际应用最多。
+3. 如果将两个链表的头结点连起来，那么就会形成一个带环的链表，利用判断是否有环来确定是否相交，时间上是线性的，空间上是常数
+4. 一旦相交之后，节点必然为公共节点，因为无环，所以存在尾节点，且尾节点必然相同，这是一个充分必要条件；时间复杂度O(N1+N2),空间复杂度O(1)
+> 四种结题思路中，第四种最简单，效率最高，选取第四种实现
+    public boolean isIntersectWithoutLoop(ListNode head1, ListNode head2){
+        // 异常情况
+        if(head1 == null || head2 == null){
+            return false;
+        }
+        while(head1.next != null){
+            head1 = head1.next; // 遍历
+        }
+        while(head2.next != null){
+            head2 = head2.next;
+        }
+        return head1==head2;
+    }
+
+## 两个无环链表相交，给出相交节点
+> 利用快慢指针的方法，设链表1的长度为L1, 链表2的长度为L2, 对于长的链表, 先走|L2-L1|步，然后两者同时遍历，第一次相等即为相交节点。
+> 也可以判断环入口的方法，但是没有上述的方便
+    public ListNode intersectNode(ListNode head1, ListNode head2){
+        // 异常情况
+        if(head1 == null || head2 == null){
+            return null;
+        }
+        int length1 = 0;
+        int length2 = 0;
+        int dis = 0;
+        ListNode cur1 = head1;
+        ListNode cur2 = head2;
+        ListNode fast = null;
+        ListNode slow = null;
+        // 遍历链表1, 计算链表的长度
+        while(cur1 != null){
+            cur1 = cur1.next;
+            length1++;
+        }
+        // 遍历链表2, 计算链表的长度
+        while(cur2 != null){
+            cur2 = cur2.next;
+            length2++;
+        }
+        // 设置快节点和慢节点以及距离
+        if(length1 >= length2){
+            fast = head1;
+            slow = head2;
+            dis = length1- length2;
+        }
+        else{
+            fast = head2;
+            slow = head1;
+            dis = length2- length1;
+        }
+        // 快节点移动dis距离
+        for(int i = dis; i > 0; i--){
+            fast = fast.next;
+        }
+        // 一旦两链表对齐，最终必然会结束，即使没有交点，那么则同为null，循环仍然结束，且fast=null
+        while(fast != slow){
+            fast = fast.next;
+            slow = slow.next;
+        }
+        return fast;
+    }
+
+## 判断两个链表是否相交（综合版)(链表可以带环)
+> 如果链表带环，那么第三种方法和第四种方法都不能使用
+> 试想，如果带环的话，该环必然是两个链表的公共节点，通过这个特性做文章
+> 只需取环内一点，判断是否属于另一个链表
+至于取环内一点，则只需改造一下hasCircle函数即可
+    public ListNode circleNode(ListNode head){
+        // 异常判断, 可以归并到主逻辑里
+        //if(head == null){
+        //    return false;
+        // }
+        // 设置快慢节点初始化
+        ListNode fast = ListNode slow = head;
+        // 判断是否能遍历完，这是经验，存在node.next的一定要保证node不为空，node.next.next一定要保证node.next不为空
+        while(fast != null && fast.next != null){
+            fast = fast.next.next;
+            slow = slow.next;
+            // 当fast赶上slow时
+            if(fast == slow){
+                return fast;
+            }
+        }
+        // 如果到达尾节点，默认返回false
+        return null;
+    }
+    // 是否相交
+    public boolean isIntersect(ListNode head1, ListNode head2){
+        // 取环内节点
+        ListNode circleNode1 = circleNode(head1);
+        ListNode circleNode2 = circleNode(head2);
+        //// 一个带环一个不带环，可以归并到最后一行上面
+        //if((circleNode1 == null && circleNode2 != null) || (circleNode1 == null && circleNode2 != null)){
+        //    return false;
+        //}
+        // 两个都不带环
+        if(circleNode1 == null && circleNode2 == null){
+            return isIntersectWithoutLoop(head1, head2); // 判断无环
+        }
+        // 两个都带环
+        // 绕其中一环一圈
+        if(circleNode1 != null && circleNode2 != null){
+            ListNode tmp = circleNode1.next;
+            // 转一圈
+            while(tmp != circleNode1){
+                if(tmp == circleNode2){
+                    return true;
+                }
+                tmp = tmp.next; // 遍历tmp
+            }
+        }
+        return false;
+    }
+
