@@ -65,4 +65,18 @@
     }
 
 
+    // 单链表逆转
+    public ListNode  reverse(ListNode head){
+        // 异常条件和终止条件(达到最后一个节点)
+        if(head == null || head.next == null){
+            return head;
+        }
+        ListNode next = head.next;
+        ListNode newHead = reverse(next);
+        // 将head插到next的后面(尾插法)
+        next.next = head;
+        head.next = null;
+        return newHead;
+    }
+
 

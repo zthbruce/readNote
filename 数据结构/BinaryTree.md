@@ -1,0 +1,139 @@
+# 什么叫Binary Tree
+> 先谈谈树
+树是一个有N个节点，具有层次关系的集合，N=0时为空树，该数据结构有以下特点:
+* 每个节点有零或多个子节点
+* 没有父节点的称为根节点
+* 非根节点只有一个父节点
+* 除了根节点以外，每个子节点可以形成不相交的子树
+> 有序树与无序树
+* 树中任意节点的子节点之间没有顺序关系，这种树称为无序树
+* 树中任意节点的子节点之间有顺序关系，这种树称为有序树
+> 二叉树(BinaryTree)
+二叉树是一种特殊的有序树，任一节点的子节点不超过2个，子树分为左子树和右子树，树主要为查找做服务，很多常用的索引都是采用树的结构进行设计的。
+# 为什么用Binary Tree
+> 树的作用主要是生成索引，加快查找速度
+
+# 常用的二叉树
+## 满二叉树
+> 除叶节点之外所有节点均有两个子节点，每层的节点数均达到最大(2^(k-1)),k表示第几层，总数为2^n -1,其中n为深度，所以必然为奇数
+> 在满二叉树中，只要确定了节点编号，节点在树中的位置就确定，所以采用顺序结构即可存储满二叉树
+> 满二叉树的集合长度是固定的，局限性较大，所以推出了完全二叉树的概念。
+## 完全二叉树
+> 设二叉树的深度为h,那么除h层以外，其余各层(1~h-1)层均达到最大个数，且h层的节点均在最左边，此为完全二叉树
+> 完全二叉树的效率很高？(可以采用顺序结构存储，读取效率非常高)，二叉堆是采用完全二叉树的方式实现的
+## 二叉搜索(查找/排序)树
+> 二叉搜索树是特殊的二叉树，满足以下性质:
+* 若某节点的左子树不空的话，左子树上所有节点都小于该节点
+* 若某节点的右子树不空的话，右子树上所有节点都大于该节点
+## ？？？
+
+# 怎么使用Binary Tree
+## 实现二叉树节点, 定义对象
+public class TreeNode{
+    public int val;
+    public TreeNode left;
+    public TreeNode right;
+    public TreeNode(int val){
+        this.val = val;
+        this.left = this.right = null;
+    }
+}
+## 二叉树遍历
+> 二叉树遍历可以分为深度优先遍历和广度优先遍历(层次遍历)两种
+> 深度优先遍历，到达一个节点，必须要先将以该节点为根的子树遍历完，然后再遍历同层的其他节点,深度优先遍历按照访问顺序包括:
+* 先序遍历
+* 中序遍历
+* 后序遍历
+> 广度优先遍历，也称为层次遍历，将同一层的节点访问结束之后再访问下一层节点
+> 深度优先遍历通常使用递归的方式理解，广度优先遍历通常使用队列的方式进行
+### 先序遍历
+> 先访问根节点，再依次访问左子树，右子树(本身就是递归的想法)，递归必须要有终止条件
+    public void preOrder(TreeNode root){
+        // 终止条件
+        if(root==null){
+            return;
+        }
+        System.out.println(root.val);
+        preOrder(root.left);
+        preOrder(root.right);
+    }
+> 非递归方式？理解如何解决该问题，而非死记硬背，还要看是否有意义，其实意义不大
+> 以前写获取所有的geohash本质上就是先序遍历的方式
+> 只不过邻居可以看成K叉树，利用循环的方式递归所有子树
+### 中序遍历
+> 先访问左子树，再访问根节点，后访问右子树
+    public void preOrder(TreeNode root){
+        // 终止条件
+        if(root==null){
+            return;
+        }
+        preOrder(root.left);
+        System.out.println(root.val);
+        preOrder(root.right);
+    }
+### 后序遍历
+> 先访问左子树，再访问右子树，再访问根节点
+    public void preOrder(TreeNode root){
+        // 终止条件
+        if(root==null){
+            return;
+        }
+        preOrder(root.left);
+        preOrder(root.right);
+        System.out.println(root.val);
+    }
+
+### 广度优先遍历(层次遍历)
+> 可以借助于队列这种数据结构存储每一层的节点
+> 初始化将根节点存入队列Q
+> 当队列Q不空的时候，弹出第一个节点作为访问节点，将该值的左右子节点入队，直到队列为空，即访问结束
+    public void levelVisit(TreeNode root){
+        // 异常处理
+        if(root == null){
+            return;
+        }
+        // 初始化队列,利用LinkedList实现队列
+        Queue q = new LinkedList<TreeNode>();
+        q.add(root);
+        // 队列不为空
+        while(!q.isEmpty()){
+            TreeNode node = q.poll(); // 队首出队
+            System.out.println(node.val); // 访问该值
+            // 可以推广至k叉树，利用循环的方式入队即可
+            q.add(node.left); // 队尾入队
+            q.add(node.right); // 队尾入队
+        }
+    }
+> Queue是继承了Collection的接口，故必然有isEmpty()方法
+
+## 求二叉树的深度
+> 首先谈谈深度，所谓深度是针对节点N，从根节点到该节点的长度即为深度，假设根节点的深度为1，树中节点最大深度称为树的深度
+> 采用左子树和右子树比较的方式，递归的结束条件应该是空节点，一旦空节点就到了叶节点，每递归一次深度就增加1
+    public int maxDepth(TreeNode root){
+        // 空节点为0，终止条件
+        if(root == null){
+            return 0;
+        }
+        // 左子树和右子树的较大值就是最大深度，注意设根节点的深度为1
+        return Math.max(maxDepth(root.left), maxDepath(root.right)) + 1;
+    }
+
+## 求二叉树的最小深度
+> 二叉树的最小深度定义 从根节点向下到达叶节点的经过的最少点数
+    public int minDepth(TreeNode root){
+        // 空节点为0，终止条件
+        if(root == null){
+            return 0;
+        }
+        int left = minDepth(root.left); // 左子树
+        int right = minDepth(root.right); // 右子树
+        // 此处有一个陷阱，就是不能直接照搬 Math.min(maxDepth(root.left), maxDepath(root.right)) + 1
+        // 因为一旦出现了空子树，子树的深度为0，但并非我们定义的最小深度，必须是到叶节点
+        // 如果左右子树中有存在空子树的，就选择非空的那个即可，空子树为0，故可以采用相加的方式
+        if(root.left == null || root.right == null){
+            return left + right + 1;
+        }
+        return Math.min(maxDepth(root.left), maxDepath(root.right)) + 1; // 往上什一层
+    }
+
+## 求二叉树的节点个数

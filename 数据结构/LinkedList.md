@@ -6,9 +6,12 @@
 > 顺序存储采用相邻的内存空间存储线性结构，访问只需要知道头地址，然后根据索引和数据类型进行推算即可，故访问速度为O(1)。但插入和删除都会导致存储空间的不连续，故内存上空间需要做对应的平移，插入删除速度为O(N)。常用的数组就是采用顺序存储的。
 > 链式存储的存储空间未必相邻，但是每个元素都会存在一个指针域，指针域会存储下一个元素的指针域，故在逻辑上是连续的。由于链式存储不需要连续的内存空间，故插入和删除的时间复杂度为O(1)。但访问元素的速度上，必须采用指针的遍历方式进行访问，故访问速度为O(N)。
 > 链表是采用链式存储的线性表，链表一般有三种，单链表，双向链表，循环链表
+> ListNode的特点是：可以有多个节点指向当前节点，但是当前节点只能
 # 为什么要有链表
 > HashMap，树，队列等数据结构都是利用链表实现
 > 链表对于插入删除频繁的线性表非常适用
+> 链表不需要连续的内存空间，特别是在做归并排序的时候占用内存小
+> 实现动态数组
 
 # 怎么用链表
 ## 链表的实现
@@ -164,7 +167,8 @@
         // }
 
         // 设置快慢节点初始化
-        ListNode fast = ListNode slow = head;
+        ListNode fast = head;
+        ListNode slow = head;
         // 判断是否能遍历完，这是经验，存在node.next的一定要保证node不为空，node.next.next一定要保证node.next不为空
         while(fast != null && fast.next != null){
             fast = fast.next.next;
@@ -202,12 +206,13 @@ fast相对于slow的速度为v, 那么追上slow的时间t = s / v <= l / v;
     此时让fast回到链表头结点，每次走1步，当再次相遇时，相遇点即为链表入口。
 > 代码如下:
     public ListNode getLoopPoint(ListNode head){
-        // 异常判断
-        if(head == null){
+        // 异常检测， 点数小于三个以下的都不可能有环
+        if(head == null || head.next == null || head.next.next == null){
             return null;
         }
         // 判断是否有环
-        ListNode fast = ListNode slow = head;
+        ListNode fast = head;
+        ListNode slow = head;
         //ListNode meetPoint = null;
         while(fast != null && fast.next != null){
             fast = fast.next.next; // 走两步
@@ -354,3 +359,75 @@ fast相对于slow的速度为v, 那么追上slow的时间t = s / v <= l / v;
         return false;
     }
 
+
+## 两个有序链表进行归并排序
+> 归并排序是针对两个有序链表，比较对应节点，将较小的节点归并到
+> 遍历算法, 先将头结点取出，然后之后将节点挂到后头
+    public ListNode mergeSort(ListNode head1, ListNode head2){
+        // 异常情况
+        // 如果链表1为空
+        if(head1 == null){
+            return head2;
+        }
+        // 如果链表2为空
+        if(head2 == null){
+            return head1;
+        }
+        // 定义头结点
+        ListNode newHead;
+        if(head1.val > head2.val){
+            newHead = head2;
+            head2 = head2.next; // 谁小谁前进一步
+        }
+        else{
+            newHead = head1;
+            head1 = head1.next; // 谁小谁前进一步
+        }
+        ListNode cur = newHead;
+        // 遍历链表, 当两者都没结束时
+        while(head1 != null && head2!=null){
+            if(head1.val < head2.val){
+                cur.next = head1;
+                cur = head1;
+                head1 = head1.next;
+            }
+            else{
+                cur.next = head2;
+                cur = head2;
+                head2 = head2.next;
+            } 
+        }
+        // 
+        ListNode tmpHead;
+        // 如果链表1结束，则将链表2的剩余部分加上即可
+        if(head1 == null){
+            tmpHead = head2;
+        }else{
+            tmpHead = head1;
+        }
+        // 遍历剩余的部分加上即可
+        cur.next = tmpHead;
+        return newHead;
+    }
+> 递归算法，递归算法写起来非常的优雅，递归算法最重要的是终止条件
+    public ListNode mergeSort(ListNode head1, ListNode head2){
+        // 异常判断与终止条件
+        // 一旦有一个链表已经结束了，那么递归结束
+        if(head1 == null){
+            return head2;
+        }
+        if(head2 == null){
+            return head1;
+        }
+        ListNode head = null; // 最好写上初始化
+        // 比较两个节点, 小者往前走
+        if(head1.val < head2.val){
+            head = head1;
+            head.next = mergeSort(head1.next, head2);
+        }
+        else{
+            head = head2;
+            head.next = mergeSort(head1, head2.next);
+        }
+        return head;
+    }
