@@ -18,13 +18,17 @@
 > 除叶节点之外所有节点均有两个子节点，每层的节点数均达到最大(2^(k-1)),k表示第几层，总数为2^n -1,其中n为深度，所以必然为奇数
 > 在满二叉树中，只要确定了节点编号，节点在树中的位置就确定，所以采用顺序结构即可存储满二叉树
 > 满二叉树的集合长度是固定的，局限性较大，所以推出了完全二叉树的概念。
+
 ## 完全二叉树
 > 设二叉树的深度为h,那么除h层以外，其余各层(1~h-1)层均达到最大个数，且h层的节点均在最左边，此为完全二叉树
 > 完全二叉树的效率很高？(可以采用顺序结构存储，读取效率非常高)，二叉堆是采用完全二叉树的方式实现的
+
 ## 二叉搜索(查找/排序)树
 > 二叉搜索树是特殊的二叉树，满足以下性质:
 * 若某节点的左子树不空的话，左子树上所有节点都小于该节点
 * 若某节点的右子树不空的话，右子树上所有节点都大于该节点
+> 二叉搜索树改善了树的搜索效率，拓扑结构好的二叉树深度h = log(N)，查找的时间复杂度由O(N) -> O(log(N)),这也说明了其严重依赖生成的二叉树结构。
+> 于是，另一种二叉树应运而生，平衡树
 ## ？？？
 
 # 怎么使用Binary Tree
@@ -137,3 +141,41 @@ public class TreeNode{
     }
 
 ## 求二叉树的节点个数
+> 二叉树的题目都可以根据左右子树的思想进行递归
+    public int nodeNumber(TreeNode root){
+        // 终止条件，异常情况
+        if(root == null){
+            return 0;
+        }
+        // 以当前节点为根节点的树，节点数 = 左子树点数 + 右子树点数 + 1
+        return nodeNumber(root.left) + nodeNumber(root.right) + 1;
+    }
+
+## 求二叉树中叶子节点的个数
+> 采用左子树和右子树的思想进行递归
+    public int leftNodeNumber(TreeNode root){
+        // 终止条件
+        if(root == null){
+            return 0;
+        }
+        // 叶节点的定义
+        if(root.left == null && root.left == null){
+            return 1;
+        }
+        return leftNodeNumber(root.left) + leftNodeNumber(root.right);
+    }
+
+## 求二叉树第K层节点的个数
+> 此问题的关键在于如何确定第K层的节点
+> 既然参数中有k，那么用k来确定递归的层数，每次减一
+    public int theKLevelNodeNumber(TreeNode root, int k){
+        // 异常判断
+        if(root == null || k < 1){
+            return 0;
+        }
+        // 终止条件
+        if(k == 1){
+            return 1;
+        }
+        return theKLevelNodeNumber(root.left, k-1) + theKLevelNodeNumber(root.right, k-1);
+    }
