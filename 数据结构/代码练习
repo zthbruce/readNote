@@ -78,5 +78,26 @@
         head.next = null;
         return newHead;
     }
+// 二叉树的广度优先遍历
+> 利用队列的方式
+public void levelIter(TreeNode root){
+    if(root == null){
+        return;
+    }
+    Queue<TreeNode> queue = new LinkedList<ListNode>;
+    queue.add(root) // 队列增加节点
+    // 如果队列不空
+    while(!queue.isEmpty()){
+        TreeNode node = queue.poll(); // 弹出第一个节点
+        System.out.println(node.val);
+        if(node.left!=null){
+            queue.add(node.left); // 将
+        }
+        if(node.right!=null){
+            queue.add(node.right);
+        }    
+    }
+}
 
+// 怎么判断
 
