@@ -406,3 +406,75 @@ public class TreeNode{
         // 结束本层递归时时，将该节点弹栈，恢复原样
         stack.pop();
     }
+
+## 二叉查找树的搜索空间
+> 给定一颗二叉查找树，然后给定一个区间[k1, k2],求所有满足值在该区间的节点值，并以升序返回
+> 与该问题类似的问题其实是遍历该树，然后找出所有满足条件的节点值，而且由于二叉查找树的中序遍历就是有序的
+> 解释一下为什么这样一定是升序的，若当某一个节点处于区间之内，那么该节点及其的产生结果列表必然升序(二叉查找树中序遍历为有序序列)
+> 我们先左子树，后右子树的遍历顺序，可知该节点遍历完了之后，其返回上层，设想二叉树的结构，再一次出现区间内的点其必然在某个父节点的右子树上，故几个有序的数组A1, A2, A3, 且A1的最大值<=A2的最小值, A2的最大值<=A3的最小值，故整体还是有序的数组
+    public class searchTree{
+        ArrayList<Integer> result; // 申明一个可变的数组作为成员变量（即为全局变量）
+        public ArrayList<Integer> searchRange(TreeNode root, int k1, int k2){
+            this.result = new ArrayList<>(); // 初始化
+            // 递归
+            searchHelper(root, k1, k2);
+            return this.result;
+        }
+        // 遍历二叉树，将有用的结果添加
+        public void searchHelper(TreeNode root, int k1, int k2){
+            // 终止条件
+            if(root == null){
+                return;
+            }
+            int val= root.val;
+            // 将root的情况做一下分类
+            if(val > k1){
+                searchHelper(root.left, k1, k2);
+            }
+            else if(val >= k1 && val <= k2){
+                // 对于该节点来说，缺失是
+                searchHelper(root.left, k1, k2);
+                result.add(val);
+                searchHelper(root.right, k1, k2);
+            }
+            else{
+                searchHelper(root.right, k1, k2);
+            }
+        }
+    }
+
+## 判断是否是二叉查找树
+> 二叉查找树的特点是
+* 对于任一节点，其左子树,右子树均为二叉查找树
+* 对于任一节点，值大于左子树的所有值，小于右子树的所有值
+> 最初的想法是对于任意节点K，只要K>=k的左子节点，k<=k的右子节点，则为二叉查找树，但这种算法是错误的。
+        12
+        /\
+       1  15
+          /\
+         2  17
+便是一个反例
+> 从另外一个角度来看，观察二叉树特点，对于节点12来说，在区间[-inf, inf]之间，对于1来说，处于[-inf, 12]之间，对于15来说处于[12,+inf], 节点2应该满足[12, 15]之间，所以2不符合条件。而且深度越深，满足区间越往里缩，所以可以用一个节点的子节点是否处于某个区间来判断是不是合法，同样利用递归的方式进行检查，时间复杂度是O(N)
+    public boolean isValidBST(TreeNode root){
+        return checkValid(root, Integer.MIN_VALUE, Integer.MAX_VALUE)
+    }
+    // 检验过程
+    public checkValid(TreeNode root, int min, int max){
+        // 异常情况
+        if(root == null){
+            return true;
+        }
+        // 判断是否正确
+        if(root.val < min || root.val > max){
+            return false; // 如果出现这种情况则不合法
+        }
+        // 遍历的方式就是利用左节点，右节点的方式递归
+        return checkValid(root.left, min, root.val) && checkValid(root.right, root.val, max);
+
+    }
+
+## 求二叉树的两个节点间的最大距离
+> 二叉树中两个节点的最长距离可能有三种情况：
+1.左子树的最大深度+右子树的最大深度为二叉树的最长距离
+2.左子树中的最长距离即为二叉树的最长距离
+3.右子树种的最长距离即为二叉树的最长距离
