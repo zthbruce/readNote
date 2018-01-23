@@ -1,0 +1,408 @@
+# 什么叫Binary Tree
+> 先谈谈树
+树是一个有N个节点，具有层次关系的集合，N=0时为空树，该数据结构有以下特点:
+* 每个节点有零或多个子节点
+* 没有父节点的称为根节点
+* 非根节点只有一个父节点
+* 除了根节点以外，每个子节点可以形成不相交的子树
+> 有序树与无序树
+* 树中任意节点的子节点之间没有顺序关系，这种树称为无序树
+* 树中任意节点的子节点之间有顺序关系，这种树称为有序树
+> 二叉树(BinaryTree)
+二叉树是一种特殊的有序树，任一节点的子节点不超过2个，子树分为左子树和右子树，树主要为查找做服务，很多常用的索引都是采用树的结构进行设计的。
+
+# 为什么用Binary Tree
+> 树的作用主要是生成索引，加快查找速度
+
+# 常用的二叉树
+## 满二叉树
+> 除叶节点之外所有节点均有两个子节点，每层的节点数均达到最大(2^(k-1)),k表示第几层，总数为2^n -1,其中n为深度，所以必然为奇数
+> 在满二叉树中，只要确定了节点编号，节点在树中的位置就确定，所以采用顺序结构即可存储满二叉树
+> 满二叉树的集合长度是固定的，局限性较大，所以推出了完全二叉树的概念。
+
+## 完全二叉树
+> 设二叉树的深度为h,那么除h层以外，其余各层(1~h-1)层均达到最大个数，且h层的节点均在最左边，此为完全二叉树
+> 完全二叉树的效率很高？(可以采用顺序结构存储，读取效率非常高)，二叉堆是采用完全二叉树的方式实现的
+
+## 二叉搜索(查找/排序)树
+> 二叉搜索树是特殊的二叉树，满足以下性质:
+* 若某节点的左子树不空的话，左子树上所有节点都小于该节点
+* 若某节点的右子树不空的话，右子树上所有节点都大于该节点
+> 二叉搜索树改善了树的搜索效率，拓扑结构好的二叉树深度h = log(N)，查找的时间复杂度由O(N) -> O(log(N)),这也说明了其严重依赖生成的二叉树结构。
+> 于是，另一种二叉树应运而生，平衡二叉查找树
+
+# 怎么使用Binary Tree
+## 实现二叉树节点, 定义对象
+public class TreeNode{
+    public int val;
+    public TreeNode left;
+    public TreeNode right;
+    public TreeNode(int val){
+        this.val = val;
+        this.left = this.right = null;
+    }
+}
+## 二叉树遍历
+> 二叉树遍历可以分为深度优先遍历和广度优先遍历(层次遍历)两种
+> 深度优先遍历，到达一个节点，必须要先将以该节点为根的子树遍历完，然后再遍历同层的其他节点,深度优先遍历按照访问顺序包括:
+* 先序遍历
+* 中序遍历
+* 后序遍历
+> 广度优先遍历，也称为层次遍历，将同一层的节点访问结束之后再访问下一层节点
+> 深度优先遍历通常使用递归的方式理解，广度优先遍历通常使用队列的方式进行
+### 先序遍历
+> 先访问根节点，再依次访问左子树，右子树(本身就是递归的想法)，递归必须要有终止条件
+    public void preOrder(TreeNode root){
+        // 终止条件
+        if(root==null){
+            return;
+        }
+        System.out.println(root.val);
+        preOrder(root.left);
+        preOrder(root.right);
+    }
+> 非递归方式？理解如何解决该问题，而非死记硬背，还要看是否有意义，其实意义不大
+> 以前写获取所有的geohash本质上就是先序遍历的方式
+> 只不过邻居可以看成K叉树，利用循环的方式递归所有子树
+### 中序遍历
+> 先访问左子树，再访问根节点，后访问右子树
+    public void preOrder(TreeNode root){
+        // 终止条件
+        if(root==null){
+            return;
+        }
+        preOrder(root.left);
+        System.out.println(root.val);
+        preOrder(root.right);
+    }
+### 后序遍历
+> 先访问左子树，再访问右子树，再访问根节点
+    public void preOrder(TreeNode root){
+        // 终止条件
+        if(root==null){
+            return;
+        }
+        preOrder(root.left);
+        preOrder(root.right);
+        System.out.println(root.val);
+    }
+
+### 广度优先遍历(层次遍历)
+> 可以借助于队列这种数据结构存储每一层的节点
+> 初始化将根节点存入队列Q
+> 当队列Q不空的时候，弹出第一个节点作为访问节点，将该值的左右子节点入队，直到队列为空，即访问结束
+    public void levelVisit(TreeNode root){
+        // 异常处理
+        if(root == null){
+            return;
+        }
+        // 初始化队列,利用LinkedList实现队列
+        Queue<TreeNode> q = new LinkedList<TreeNode>();
+        q.add(root);
+        // 队列不为空
+        while(!q.isEmpty()){
+            TreeNode node = q.poll(); // 队首出队
+            System.out.println(node.val); // 访问该值
+            // 可以推广至k叉树，利用循环的方式入队即可
+            if(node.left != null){
+                q.add(node.left); // 队尾入队
+            }
+            if(node.right!=null){
+                q.add(node.right); // 队尾入队
+            }
+        }
+    }
+> Queue是继承了Collection的接口，故必然有isEmpty()方法
+
+## 求二叉树的深度
+> 首先谈谈深度，所谓深度是针对节点N，从根节点到该节点的长度即为深度，假设根节点的深度为1，树中节点最大深度称为树的深度
+> 采用左子树和右子树比较的方式，递归的结束条件应该是空节点，一旦空节点就到了叶节点，每递归一次深度就增加1
+    public int maxDepth(TreeNode root){
+        // 空节点为0，终止条件
+        if(root == null){
+            return 0;
+        }
+        // 左子树和右子树的较大值就是最大深度，注意设根节点的深度为1
+        return Math.max(maxDepth(root.left), maxDepath(root.right)) + 1;
+    }
+
+## 求二叉树的最小深度
+> 二叉树的最小深度定义 从根节点向下到达叶节点的经过的最少点数
+    public int minDepth(TreeNode root){
+        // 空节点为0，终止条件
+        if(root == null){
+            return 0;
+        }
+        int left = minDepth(root.left); // 左子树
+        int right = minDepth(root.right); // 右子树
+        // 此处有一个陷阱，就是不能直接照搬 Math.min(maxDepth(root.left), maxDepath(root.right)) + 1
+        // 因为一旦出现了空子树，子树的深度为0，但并非我们定义的最小深度，必须是到叶节点
+        // 如果左右子树中有存在空子树的，就选择非空的那个即可，空子树为0，故可以采用相加的方式
+        if(root.left == null || root.right == null){
+            return left + right + 1;
+        }
+        return Math.min(maxDepth(root.left), maxDepath(root.right)) + 1; // 往上什一层
+    }
+
+## 求二叉树的节点个数
+> 二叉树的题目都可以根据左右子树的思想进行递归
+    public int nodeNumber(TreeNode root){
+        // 终止条件，异常情况
+        if(root == null){
+            return 0;
+        }
+        // 以当前节点为根节点的树，节点数 = 左子树点数 + 右子树点数 + 1
+        return nodeNumber(root.left) + nodeNumber(root.right) + 1;
+    }
+
+## 求二叉树中叶子节点的个数
+> 采用左子树和右子树的思想进行递归
+    public int leftNodeNumber(TreeNode root){
+        // 终止条件
+        if(root == null){
+            return 0;
+        }
+        // 叶节点的定义
+        if(root.left == null && root.left == null){
+            return 1;
+        }
+        return leftNodeNumber(root.left) + leftNodeNumber(root.right);
+    }
+
+## 求二叉树第K层节点的个数
+> 此问题的关键在于如何确定第K层的节点
+> 类比于用递归的方式遍历，只需要往下走K-1次即可，即终止条件为K=1
+> 既然参数中有k，那么用k来确定递归的层数，每次减一
+    public int theKLevelNodeNumber(TreeNode root, int k){
+        // 异常判断
+        if(root == null || k < 1){
+            return 0;
+        }
+        // 终止条件
+        if(k == 1){
+            return 1;
+        }
+        return theKLevelNodeNumber(root.left, k-1) + theKLevelNodeNumber(root.right, k-1);
+    }
+
+## 判断二叉树是否为平衡二叉树
+> 首先需要了解什么是平衡二叉树: 任一节点的左子树和右子树的深度之差<=1
+> 最先想到的是遍历每个节点，然后每个节点求其左右子树的深度，应该怎么返回情况：
+> 
+> 终止条件：
+* node == null? return true // 空的树也算是平衡的
+* isAverge(root.left) && isAverge(root.right) && Math.abs(maxDepth(root.left) - maxDepth(root.right))<=1
+> 如果直接利用求深度的函数 maxDepth, 进行递归
+    // 利用maxDepth(利用树深度)
+    public boolean isAverage(TreeNode root){
+        if(root == null){
+            return true;
+        }
+        // 当满足该条件时
+        if(isAverge(root.left) && isAverge(root.right) && Math.abs(maxDepth(root.left) - maxDepth(root.right))<=1){
+            return true;
+        }
+        // 不满足则返回false
+        return false;
+    }
+> 上面不是一个好的算法，因为会重复的计算很多次深度，可以改造计算深度算法来进行优化
+>  
+    // 如果平衡就返回深度，如果不平衡就返回-1
+    public int maxDepth2(TreeNode node){
+        // 终止条件
+        if(node == null){
+            return 0;
+        }
+        int left = maxDepth2(node.left);
+        int right = maxDepth2(node.right);
+        // 当左子树为-1或者右子树为-1或者当前左子树和右子树的高度差为-1，那么说明不平衡
+        if(left == -1 || right == -1 || Math.abs(left - right) > 1){
+            return -1;
+        }
+        return Math.max(maxDepth2(node.left), maxDepth2(node.right)) + 1;
+    }
+    // 判断是否平衡
+    public boolean isAverage(TreeNode root){
+        return maxDepth2(root) != -1; // -1为不平衡的标志
+    }
+## 判断二叉树是否是完全二叉树
+> 首先要知道什么是完全二叉树，完全二叉树：设树的深度为h，那么从1~h-1层，每层节点都达到最大，h层的节点都集中在最左边
+> 其实这样的描述类似于层次遍历(广度优先遍历), 类比的思想，我们可以引入队列，一开始我是想，如果能够记录节点的左右left和right于val里面，那么问题就转化为left和right是否间隔出现，如果出现了连续的left或者连续的right，那么必然不是完全二叉树。return false,如果遍历完毕，则返回true;但该算法如果要求改变原树的内容和结构，局限性较大。
+> 另一种算法，是观察完全二叉树的结构之后得出的，即一旦出现left节点不空，right节点为空的情况，那么不能够再出现比该left节点更加靠右，或者更加靠下的节点，即队列中之后的节点都不能存在子节点
+    public boolean isComplete(TreeNode root){
+        // 异常情况
+        if(root == null){
+            return false;
+        }
+        Queue<TreeNode> queue = new LinkedList<TreeNode>;
+        queue.add(root);
+        // 如果不为空
+        while(!queue.isEmpty()){
+            TreeNode current = queue.poll();
+            boolean hasChild = true; // 之后队列能否拥有子节点
+            // 不能拥有子节点的情况
+            if(!hasChild){
+                if(current.left!=null || current.right!=null){
+                    return false;
+                }
+            }
+            else{
+                // 按情况分解
+                if(current.left!=null && current.right!=null){
+                    queue.add(current.left);
+                    queue.add(current.right);
+                }
+                // 这种情况直接不满足完全二叉树都在左边的定义
+                else if(current.left == null && current.right != null){
+                    return false;
+                }
+                // 如果左节点存在, 右节点不存在，那么不能再出现比该左节点更右更下的节点，所以队列中的剩余节点不允许再有子节点
+                else if(current.left != null && current.right == null){
+                    queue.add(current.left);
+                    hasChild = false;
+                }
+                // 最后就是子节点均为空的情况，那么之后的结点必然不能有子节点
+                else{
+                    hasChild = false;
+                }
+            }
+        }
+        // 默认返回true
+        return true;
+    }
+
+## 二叉树是否相同
+> 判断二叉树是否相同，问题类似于递归遍历节点，然后比较节点是否相同
+    public boolean isSameTree(TreeNode r1, TreeNode r2){
+        // 两者均为空指针
+        if(r1 == null && r2 == null){
+            return true;
+        }
+        // 一个空，一个不为空
+        else if(r1 == null || r2 == null){
+            return false; 
+        }
+        else{ 
+            // 如果这三者都相同，必然相同
+            return r1.val == r2.val && isSameTree(r1.left, r2.left) && isSameTree(r1.right, r2.right);
+        }
+    }
+
+## 二叉树是否为镜像
+> 判断二叉树是否为镜像，镜像的意思其实是左右互换，问题与上类似，只是左右节点需要做一转换
+    public boolean isMirrorTree(TreeNode r1, TreeNode r2){
+        // 两者均为空指针
+        if(r1 == null && r2 == null){
+            return true;
+        }
+        // 一个空，一个不为空
+        else if(r1 == null || r2 == null){
+            return false; 
+        }
+        else{ 
+            // 如果这三者都相同，必然相同
+            return r1.val == r2.val && isMirrorTree(r1.left, r2.right) && isMirrorTree(r1.right, r2.left);
+        }
+    }
+
+## 生成镜像二叉树
+> 类似于递归遍历，然后将左右子树左右互换
+    public TreeNode mirrorTree(TreeNode root){
+        // 如果根节点为空
+        if(root == null){
+            return null;
+        }
+        // 左子树由右子树生成，右子树由左子树生成
+        TreeNode left = mirrorTree(root.right);
+        TreeNode right = mirrorTree(root.left);
+        root.left = left;
+        root.right = right;
+        return root; // 返回根节点
+    }
+## 二叉查找树的查询
+> 二叉查找树中，左子树恒小于根节点，右子树恒大于根节点，以此查找条件
+> root为二叉查找树，val为待查找值
+    public TreeNode binarySearch(TreeNode root, int val){
+        // 异常条件
+        if(root==null){
+            return null;
+        }
+        // 如果相等
+        if(root.val == val){
+            return root;
+        }
+        else if(root.val > val){
+            return binarySearch(root.left, val);
+        }
+        else{
+            binarySearch(root.right, val);
+        }
+        return null;
+    }
+## 二叉查找树插入节点
+> 二叉查找树节点插入过程类似于查找，实际上写入的过程本身就包括，寻址(查找) + 插入内容
+> 返回结果：是否插入成功
+    public boolean insertTree(TreeNode root, TreeNode node){
+        // 异常情况
+        if(root == null || root.val == node.val){
+            return false;
+        }
+        // 如果比root大
+        if(root.val < node.val){
+            if(root.right == null){
+                root.right = node;
+                return true;
+            }
+            else{
+                return insertTree(root.right, node);
+            }
+        }
+        else{
+            if(root.left == null){
+                root.left = node;
+            }
+            else{
+                return insertTree(root.left, node);
+            }
+        }
+        return false; // 编译通过
+    }
+
+## 输入一个二叉树和一个整数，打印出节点值之和等于该整数的所有路径
+> 首先说一说所谓路径：一般来说，路径指的是从根节点到叶子节点的节点序列;
+> 实际上递归本身就是压栈，而每次递归都会就增加了一个新的元素，为了找出所有的路径，我们需要一种随着本层递归结束就弹出加入元素的数据结构，满足后进先出的数据结构就是栈，此处非常巧妙，应该多联系这个题目，能对栈这种数据结构带来的神奇效应有更好的理解。
+> 输入为: 二叉树树根和待求整数
+    public void finPath(TreeNode root, int sum){
+        // 异常处理
+        if(root == null){
+            return;
+        }
+        // 声明一个栈可以保存目前已经入栈的元素，一旦一个递归结束了，可以弹出
+        Stack<Integer> stack = new Stack<Integer>(); // 注意多态只使用与引用类型
+        int currentSum = 0;
+        findPath(root, stack, sum, currentSum);
+    }
+
+    // 用来递归的函数
+    public void findPath(TreeNode root, Stack<Integer> stack, int sum， int currentSum){
+        // 终止条件，到达叶子节点
+        stack.push(root.val); // 将当前节点值入栈
+        currentSum += root.val; // 计算当前和
+        // 到达叶子节点并且和为sum时，输出
+        // 若将sum那个条件去掉，就是获得所有的路径
+        if(root.left == null && root.right == null && currentSum == sum){
+            for(int i: stack){
+                System.out.println(i+ " ");
+            }
+        }
+        // 左子树不为空，则递归左子树
+        if(root.left!=null){
+            findPath(root.left, stack, sum, currentSum);
+        }
+        // 右子树不为空，则
+        if(root.right!=null){
+            findPath(root.right, stack, sum, currentSum);
+        }
+        // 结束本层递归时时，将该节点弹栈，恢复原样
+        stack.pop();
+    }

@@ -1,0 +1,103 @@
+# 代码练习
+# 单链表反转
+## 单链表声明
+    public class ListNode{
+        public int val;
+        public ListNode next;
+        public ListNode(int val){
+            this.val = val;
+            this.next = null;
+        }
+    }
+## 遍历法(前插法)
+    public ListNode reverse(ListNode head){
+        ListNode prev = null;
+        // 之所以采用head!=null的方式进行遍历
+        while(head != null){
+            // 不要使用ListNode cur = head; 这样会使得head发生变化，先将next保存下来为王道
+            ListNode next = head.next;
+            head.next = prev; // 前插法
+            prev = head; // 更新头节点
+            head = next; // 更新遍历节点
+        }
+        return prev;
+    }
+
+## 递归法
+// 异常条件，增加稳健性
+    public ListNode reverse(ListNode head){
+        // 第一个为异常条件， 第二个为递归终止条件
+        if(head == null || head.next == null){
+            return head;
+        }
+        // 遍历链表，达到最后一个节点
+        ListNode next = head.next;
+        ListNode newHead = reverse(next);
+        // 将head插到next之后
+        next.next = head;
+        head.next = null;
+        return newHead;
+    }
+
+# 双链表反转
+## 双链表声明
+    public class DListNode{
+        public int val;
+        public DListNode prev;
+        public DListNode next;
+        public DListNode(int val){
+            this.val = val;
+            this.prev = this.next = null; // 可以连赋值
+        }
+    }
+## 反转
+    public DlistNode reverse(DlistNode head){
+        // 申明
+        DlistNode cur = null;
+        while(head != null){
+            cur = head;   // 为了获得最后一个节点，将该节点保存下来, 这是遍历法的经典做法
+            DlistNode next = cur.next;
+            cur.next = cur.prev;
+            cur.prev = next;
+            head = next;
+        }
+        return cur;
+    }
+
+
+    // 单链表逆转
+    public ListNode  reverse(ListNode head){
+        // 异常条件和终止条件(达到最后一个节点)
+        if(head == null || head.next == null){
+            return head;
+        }
+        ListNode next = head.next;
+        ListNode newHead = reverse(next);
+        // 将head插到next的后面(尾插法)
+        next.next = head;
+        head.next = null;
+        return newHead;
+    }
+// 二叉树的广度优先遍历
+> 利用队列的方式
+public void levelIter(TreeNode root){
+    if(root == null){
+        return;
+    }
+    Queue<TreeNode> queue = new LinkedList<ListNode>;
+    queue.add(root) // 队列增加节点
+    // 如果队列不空
+    while(!queue.isEmpty()){
+        TreeNode node = queue.poll(); // 弹出第一个节点
+        System.out.println(node.val);
+        if(node.left!=null){
+            queue.add(node.left); // 将
+        }
+        if(node.right!=null){
+            queue.add(node.right);
+        }    
+    }
+}
+
+// 怎么判断
+
