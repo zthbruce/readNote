@@ -167,6 +167,7 @@ public class TreeNode{
 
 ## 求二叉树第K层节点的个数
 > 此问题的关键在于如何确定第K层的节点
+> 类比于用递归的方式遍历，只需要往下走K-1次即可，即终止条件为K=1
 > 既然参数中有k，那么用k来确定递归的层数，每次减一
     public int theKLevelNodeNumber(TreeNode root, int k){
         // 异常判断
@@ -179,3 +180,6 @@ public class TreeNode{
         }
         return theKLevelNodeNumber(root.left, k-1) + theKLevelNodeNumber(root.right, k-1);
     }
+
+## 判断二叉树是否为平衡二叉树
+> 首先需要了解什么是平衡二叉树: 左子树和右子树的深度之差<=1
