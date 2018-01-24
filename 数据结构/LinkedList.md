@@ -53,6 +53,7 @@
 > 1->2->3->4->null => 4->3->2->1->null
 > 遍历链表，然后将每个节点依次往前插, 插至prev的前面，然后将其更新为prev(前插法),最终返回prev作为头结点。短短的五行代码，仅供欣赏。遍历算法，关键在于终止条件。
 > 该算法的本质是前插算法
+>
     public ListNode reverse(ListNode head){
         ListNode prev = null;
         while(head != null){
@@ -66,6 +67,7 @@
 
 > 递归算法，本质上也是用来遍历，关键在于何时返回，化繁为简，说起来多么容易，实则经过非常巧妙的构思
 > 该算法的本质是后插算法
+>
     public ListNode reverse(ListNode head){
         // 第一个条件是判断异常，第二个条件是递归结束条件
         if(head == null || head.next == null){
@@ -80,6 +82,7 @@
     }
 ### 双向链表
 > 遍历链表，只要将链表的两个方向进行调换即可，逻辑上更简单, 只要遍历链表，最后那个节点就是头结点了，也是非常经典的代码
+>
     public DListNode reverse(DListNode head){
         ListNode cur = null;
         while(head != null){
@@ -94,6 +97,7 @@
 ## 链表删除
 > 链表删除，一般来说需要将节点的前向节点给出，还有一种是狸猫换太子的方法，将下一个节点复制过来，但这种方法不适合尾节点的删除
 > O(1) 算法
+>
     public void delete(node){
         // 边界条件
         if(node == null || node.next == null){
@@ -107,6 +111,7 @@
 ## 求链表倒数第K个节点
 > 链表和数组有一个非常常用的技巧，快慢指针法
 > 设置两个指针，slow, fast, fast比slow快K步，那么fast到达尾节点时，slow处于倒数第K个节点(最后一个节点为倒数第1个)
+>
     public ListNode theKthNode(ListNode head, int k){
         // 边界条件
         if(k < 0 || head == null){
@@ -132,6 +137,7 @@
 
 ## 求链表的中间节点
 > 设置两个指针，slow, fast, fast每次走两步，slow每次走一步，当fast到达尾节点(或者倒数第二个节点)，slow正好处于中间节点（对于奇数个节点来说，中间节点只有一个，正好取之；对于偶数个节点来说，中间节点有两个，取前面那个即可)
+>
     public ListNode midNode(ListNode head){
         // 异常情况
         if(head == null){
@@ -151,6 +157,7 @@
 ## 判断链表是否有环
 > 这个原理类似于跑步，跑圈时如果一个速度比较快，一个速度比较慢，那么经过一段时间，速度快的必然会和速度慢的相遇
 > 同上面一样，设置快慢指针，slow, fast, fast每次走两步，slow每次走一步
+>
     public boolean hasCircle(ListNode head){
         // 异常判断, 可以归并到主逻辑里
         //if(head == null){
@@ -195,6 +202,7 @@ fast相对于slow的速度为v, 那么追上slow的时间t = s / v <= l / v;
     从链表头结点开始，fast每次走2步，slow每次走1步，当两者相遇时，则确定链表有环。
     此时让fast回到链表头结点，每次走1步，当再次相遇时，相遇点即为链表入口。
 > 代码如下:
+>
     public ListNode getLoopPoint(ListNode head){
         // 异常检测， 点数小于三个以下的都不可能有环
         if(head == null || head.next == null || head.next.next == null){
@@ -235,6 +243,7 @@ fast相对于slow的速度为v, 那么追上slow的时间t = s / v <= l / v;
 3. 如果将两个链表的头结点连起来，那么就会形成一个带环的链表，利用判断是否有环来确定是否相交，时间上是线性的，空间上是常数
 4. 一旦相交之后，节点必然为公共节点，因为无环，所以存在尾节点，且尾节点必然相同，这是一个充分必要条件；时间复杂度O(N1+N2),空间复杂度O(1)
 > 四种结题思路中，第四种最简单，效率最高，选取第四种实现
+>
     public boolean isIntersectWithoutLoop(ListNode head1, ListNode head2){
         // 异常情况
         if(head1 == null || head2 == null){
@@ -252,6 +261,7 @@ fast相对于slow的速度为v, 那么追上slow的时间t = s / v <= l / v;
 ## 两个无环链表相交，给出相交节点
 > 利用快慢指针的方法，设链表1的长度为L1, 链表2的长度为L2, 对于长的链表, 先走|L2-L1|步，然后两者同时遍历，第一次相等即为相交节点。
 > 也可以判断环入口的方法，但是没有上述的方便
+>
     public ListNode intersectNode(ListNode head1, ListNode head2){
         // 异常情况
         if(head1 == null || head2 == null){
@@ -301,7 +311,8 @@ fast相对于slow的速度为v, 那么追上slow的时间t = s / v <= l / v;
 > 如果链表带环，那么第三种方法和第四种方法都不能使用
 > 试想，如果带环的话，该环必然是两个链表的公共节点，通过这个特性做文章
 > 只需取环内一点，判断是否属于另一个链表
-至于取环内一点，则只需改造一下hasCircle函数即可
+> 至于取环内一点，则只需改造一下hasCircle函数即可
+>
     public ListNode circleNode(ListNode head){
         // 异常判断, 可以归并到主逻辑里
         //if(head == null){
@@ -353,6 +364,7 @@ fast相对于slow的速度为v, 那么追上slow的时间t = s / v <= l / v;
 ## 两个有序链表进行归并排序
 > 归并排序是针对两个有序链表，比较对应节点，将较小的节点归并到
 > 遍历算法, 先将头结点取出，然后之后将节点挂到后头
+>
     public ListNode mergeSort(ListNode head1, ListNode head2){
         // 异常情况
         // 如果链表1为空
@@ -400,6 +412,7 @@ fast相对于slow的速度为v, 那么追上slow的时间t = s / v <= l / v;
         return newHead;
     }
 > 递归算法，递归算法写起来非常的优雅，递归算法最重要的是终止条件
+>
     public ListNode mergeSort(ListNode head1, ListNode head2){
         // 异常判断与终止条件
         // 一旦有一个链表已经结束了，那么递归结束

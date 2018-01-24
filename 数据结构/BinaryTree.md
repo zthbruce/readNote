@@ -52,6 +52,7 @@ public class TreeNode{
 > 深度优先遍历通常使用递归的方式理解，广度优先遍历通常使用队列的方式进行
 ### 先序遍历
 > 先访问根节点，再依次访问左子树，右子树(本身就是递归的想法)，递归必须要有终止条件
+>
     public void preOrder(TreeNode root){
         // 终止条件
         if(root==null){
@@ -66,6 +67,7 @@ public class TreeNode{
 > 只不过邻居可以看成K叉树，利用循环的方式递归所有子树
 ### 中序遍历
 > 先访问左子树，再访问根节点，后访问右子树
+>
     public void preOrder(TreeNode root){
         // 终止条件
         if(root==null){
@@ -77,6 +79,7 @@ public class TreeNode{
     }
 ### 后序遍历
 > 先访问左子树，再访问右子树，再访问根节点
+>
     public void preOrder(TreeNode root){
         // 终止条件
         if(root==null){
@@ -91,6 +94,7 @@ public class TreeNode{
 > 可以借助于队列这种数据结构存储每一层的节点
 > 初始化将根节点存入队列Q
 > 当队列Q不空的时候，弹出第一个节点作为访问节点，将该值的左右子节点入队，直到队列为空，即访问结束
+>
     public void levelVisit(TreeNode root){
         // 异常处理
         if(root == null){
@@ -117,6 +121,7 @@ public class TreeNode{
 ## 求二叉树的深度
 > 首先谈谈深度，所谓深度是针对节点N，从根节点到该节点的长度即为深度，假设根节点的深度为1，树中节点最大深度称为树的深度
 > 采用左子树和右子树比较的方式，递归的结束条件应该是空节点，一旦空节点就到了叶节点，每递归一次深度就增加1
+>
     public int maxDepth(TreeNode root){
         // 空节点为0，终止条件
         if(root == null){
@@ -128,6 +133,7 @@ public class TreeNode{
 
 ## 求二叉树的最小深度
 > 二叉树的最小深度定义 从根节点向下到达叶节点的经过的最少点数
+>
     public int minDepth(TreeNode root){
         // 空节点为0，终止条件
         if(root == null){
@@ -146,6 +152,7 @@ public class TreeNode{
 
 ## 求二叉树的节点个数
 > 二叉树的题目都可以根据左右子树的思想进行递归
+>
     public int nodeNumber(TreeNode root){
         // 终止条件，异常情况
         if(root == null){
@@ -157,6 +164,7 @@ public class TreeNode{
 
 ## 求二叉树中叶子节点的个数
 > 采用左子树和右子树的思想进行递归
+>
     public int leftNodeNumber(TreeNode root){
         // 终止条件
         if(root == null){
@@ -173,6 +181,7 @@ public class TreeNode{
 > 此问题的关键在于如何确定第K层的节点
 > 类比于用递归的方式遍历，只需要往下走K-1次即可，即终止条件为K=1
 > 既然参数中有k，那么用k来确定递归的层数，每次减一
+>
     public int theKLevelNodeNumber(TreeNode root, int k){
         // 异常判断
         if(root == null || k < 1){
@@ -193,6 +202,7 @@ public class TreeNode{
 * node == null? return true // 空的树也算是平衡的
 * isAverge(root.left) && isAverge(root.right) && Math.abs(maxDepth(root.left) - maxDepth(root.right))<=1
 > 如果直接利用求深度的函数 maxDepth, 进行递归
+>
     // 利用maxDepth(利用树深度)
     public boolean isAverage(TreeNode root){
         if(root == null){
@@ -229,6 +239,7 @@ public class TreeNode{
 > 首先要知道什么是完全二叉树，完全二叉树：设树的深度为h，那么从1~h-1层，每层节点都达到最大，h层的节点都集中在最左边
 > 其实这样的描述类似于层次遍历(广度优先遍历), 类比的思想，我们可以引入队列，一开始我是想，如果能够记录节点的左右left和right于val里面，那么问题就转化为left和right是否间隔出现，如果出现了连续的left或者连续的right，那么必然不是完全二叉树。return false,如果遍历完毕，则返回true;但该算法如果要求改变原树的内容和结构，局限性较大。
 > 另一种算法，是观察完全二叉树的结构之后得出的，即一旦出现left节点不空，right节点为空的情况，那么不能够再出现比该left节点更加靠右，或者更加靠下的节点，即队列中之后的节点都不能存在子节点
+>
     public boolean isComplete(TreeNode root){
         // 异常情况
         if(root == null){
@@ -273,6 +284,7 @@ public class TreeNode{
 
 ## 二叉树是否相同
 > 判断二叉树是否相同，问题类似于递归遍历节点，然后比较节点是否相同
+>
     public boolean isSameTree(TreeNode r1, TreeNode r2){
         // 两者均为空指针
         if(r1 == null && r2 == null){
@@ -290,6 +302,7 @@ public class TreeNode{
 
 ## 二叉树是否为镜像
 > 判断二叉树是否为镜像，镜像的意思其实是左右互换，问题与上类似，只是左右节点需要做一转换
+>
     public boolean isMirrorTree(TreeNode r1, TreeNode r2){
         // 两者均为空指针
         if(r1 == null && r2 == null){
@@ -307,6 +320,7 @@ public class TreeNode{
 
 ## 生成镜像二叉树
 > 类似于递归遍历，然后将左右子树左右互换
+>
     public TreeNode mirrorTree(TreeNode root){
         // 如果根节点为空
         if(root == null){
@@ -322,6 +336,7 @@ public class TreeNode{
 ## 二叉查找树的查询
 > 二叉查找树中，左子树恒小于根节点，右子树恒大于根节点，以此查找条件
 > root为二叉查找树，val为待查找值
+>
     public TreeNode binarySearch(TreeNode root, int val){
         // 异常条件
         if(root==null){
@@ -342,6 +357,7 @@ public class TreeNode{
 ## 二叉查找树插入节点
 > 二叉查找树节点插入过程类似于查找，实际上写入的过程本身就包括，寻址(查找) + 插入内容
 > 返回结果：是否插入成功
+>
     public boolean insertTree(TreeNode root, TreeNode node){
         // 异常情况
         if(root == null || root.val == node.val){
@@ -372,6 +388,7 @@ public class TreeNode{
 > 首先说一说所谓路径：一般来说，路径指的是从根节点到叶子节点的节点序列;
 > 实际上递归本身就是压栈，而每次递归都会就增加了一个新的元素，为了找出所有的路径，我们需要一种随着本层递归结束就弹出加入元素的数据结构，满足后进先出的数据结构就是栈，此处非常巧妙，应该多联系这个题目，能对栈这种数据结构带来的神奇效应有更好的理解。
 > 输入为: 二叉树树根和待求整数
+>
     public void finPath(TreeNode root, int sum){
         // 异常处理
         if(root == null){
@@ -407,7 +424,6 @@ public class TreeNode{
         stack.pop();
     }
 
-<<<<<<< HEAD
 ## 求二叉树中两个节点的最长距离
 > 这是一个最优化问题，类似的问题其实可以是二叉树的最大深度的扩展，对于最大深度一个值，只需要对左右子树进行递归，取左子树和右子树的较大值 + 1，但是现在的问题不仅仅需要最大深度，还需要最长距离，所有新建一个类包含深度和长度来作为结果，作为递归的返回。
 > 而两个节点的最长距离无非就三种情况(分情况讨论)
@@ -417,6 +433,7 @@ public class TreeNode{
 > 根据分的情况进行递归
 
 > 最简单的思路，就是使用maxDepth的函数，每个节点都求一次深度，但这样做的复杂度就是O(N*log(N))
+>
     // 求最大距离，单个节点的最长距离肯定为0
     public int maxDistance(TreeNode root){
         // 异常情况与终止条件
@@ -429,6 +446,7 @@ public class TreeNode{
     }
 
 > 如果引入数据结构，将深度保存下来，便可以在递归的时候就计算子树的深度，max(left.depth， right.depth) + 1
+>
     public class Result{
         int maxDepth;
         int maxDistance;
@@ -439,6 +457,7 @@ public class TreeNode{
         }
     }
 > 改进后的算法
+>
     public int maxDistance(TreeNode root){
         // 返回根节点
         return findMaxDistance(root).maxDistance;
