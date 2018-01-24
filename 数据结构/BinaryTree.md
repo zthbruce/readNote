@@ -406,3 +406,57 @@ public class TreeNode{
         // 结束本层递归时时，将该节点弹栈，恢复原样
         stack.pop();
     }
+
+## 求二叉树中两个节点的最长距离
+> 这是一个最优化问题，类似的问题其实可以是二叉树的最大深度，怎么求最大深度，利用左子树与右子树递归，取左子树的深度和右子树的深度较大值+1
+> 而两个节点的最长距离无非就三种情况(分情况讨论)
+* 左子树的深度 + 右子树的深度(如果设根节点的深度为1，那么子树的深度恰好可以看成根节点到最深叶子的路径长度)
+* 左子树的最长距离
+* 右子树的最长距离
+> 根据分的情况进行递归
+
+> 最简单的思路，就是使用maxDepth的函数，每个节点都求一次深度，但这样做的复杂度就是O(N*log(N))
+    // 求最大距离，单个节点的最长距离肯定为0
+    public int maxDistance(TreeNode root){
+        // 异常情况与终止条件
+        if(root == null){
+            return 0;
+        }
+        TreeNode left = root.left;
+        TreeNode right = root.right;
+        return max(max(maxDistance(left), maxDistance(right)), maxDepth(left) + maxDepth(right))
+    }
+
+> 如果引入数据结构，将深度保存下来，便可以在递归的时候就计算子树的深度，max(left.depth， right.depth) + 1
+    public class Result{
+        int maxDepth;
+        int maxDistance;
+        // 最大深度存储下来
+        public Result(int depth, int distance){
+            this.maxDepth = depth;
+            this.maxDistance = distance; 
+        }
+    }
+> 改进后的算法
+    public int maxDistance(TreeNode root){
+        // 返回根节点
+        return findMaxDistance(root).maxDistance;
+    }
+    // 本质上是最大深度的变形 
+    public Result findMaxDistance(TreeNode root){
+        // 终止条件
+        if(root == null){
+            return new Result(0, 0); // 如果为null节点，那么深度和最大距离都为0
+        }
+        // 求左右子树的 
+        Result left = findMaxDistance(root.left);
+        Result right = findMaxDistance(root.right);
+        // 求节点的最大深度
+        int maxDepth = Math.max(left.maxDepth, right.maxDepth) + 1; // 求最大深度
+        // 求节点的最大距离
+        int maxDistance = Math.max(Math.max(left.maxDistance, right.maxDistance), left.maxDepth + right.maxDepth);
+        // 返回结果
+        return new Result(maxDepth, maxDistance);
+    }
+
+    
