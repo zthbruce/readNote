@@ -39,17 +39,6 @@
 ### 遍历链表
 > 循环遍历求最后一个节点
 >
-   public ListNode iterate(ListNode head){
-        ListNode lastNode = null;
-        while(head != null){
-            // 对节点的操作
-            lastNode = head;
-            head = head.next;
-        }
-        return lastNode;
-    }
-> 递归遍历求最后一个节点
->
     public ListNode iterate(ListNode head){
         if(head == null || head.next == null){
             return head;
