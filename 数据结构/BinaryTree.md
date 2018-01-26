@@ -12,7 +12,9 @@
 二叉树是一种特殊的有序树，任一节点的子节点不超过2个，子树分为左子树和右子树，树主要为查找做服务，很多常用的索引都是采用树的结构进行设计的。
 
 # 为什么用Binary Tree
-> 树的作用主要是生成索引，加快查找速度
+> 更广义的来说，所谓数据结构，无非是用来描述(表达/解释)现实中存在的结构，所以当顺序表和链表这两种数据结构都是用来描述线性结构
+> 对于1对k(k>1)的数据结构,一种抽象的描述就是树，k=2就是最常用的二叉树
+> 在查找(搜索)的算法中，二叉树的引入会减少时间复杂度到O(log(N))，而线性表的查找线性复杂度为O(N)
 
 # 常用的二叉树
 ## 满二叉树
@@ -23,7 +25,7 @@
 ## 完全二叉树
 > 设二叉树的深度为h,那么除h层以外，其余各层(1~h-1)层均达到最大个数，且h层的节点均在最左边，此为完全二叉树
 > 完全二叉树的效率很高？(可以采用顺序结构存储，读取效率非常高)，二叉堆是采用完全二叉树的方式实现的
-
+> 完全二叉树可以采用顺序表进行存储
 ## 二叉搜索(查找/排序)树
 > 二叉搜索树是特殊的二叉树，满足以下性质:
 * 若某节点的左子树不空的话，左子树上所有节点都小于该节点
@@ -225,16 +227,22 @@ public class TreeNode{
         }
         int left = maxDepth2(node.left);
         int right = maxDepth2(node.right);
+        int result;
         // 当左子树为-1或者右子树为-1或者当前左子树和右子树的高度差为-1，那么说明不平衡
+        // 递推条件
         if(left == -1 || right == -1 || Math.abs(left - right) > 1){
-            return -1;
+            result = -1;
         }
-        return Math.max(maxDepth2(node.left), maxDepth2(node.right)) + 1;
+        else{
+            result = Math.max(left, right) + 1;
+        }
+        return result;
     }
     // 判断是否平衡
     public boolean isAverage(TreeNode root){
         return maxDepth2(root) != -1; // -1为不平衡的标志
     }
+
 ## 判断二叉树是否是完全二叉树
 > 首先要知道什么是完全二叉树，完全二叉树：设树的深度为h，那么从1~h-1层，每层节点都达到最大，h层的节点都集中在最左边
 > 其实这样的描述类似于层次遍历(广度优先遍历), 类比的思想，我们可以引入队列，一开始我是想，如果能够记录节点的左右left和right于val里面，那么问题就转化为left和right是否间隔出现，如果出现了连续的left或者连续的right，那么必然不是完全二叉树。return false,如果遍历完毕，则返回true;但该算法如果要求改变原树的内容和结构，局限性较大。
@@ -360,11 +368,11 @@ public class TreeNode{
 >
     public boolean insertTree(TreeNode root, TreeNode node){
         // 异常情况
-        if(root == null || root.val == node.val){
-            return false;
+        if(root == null){
+            root = node; // 该节点就是根节点
         }
         // 如果比root大
-        if(root.val < node.val){
+        if(root.val <= node.val){
             if(root.right == null){
                 root.right = node;
                 return true;
@@ -479,7 +487,63 @@ public class TreeNode{
         return new Result(maxDepth, maxDistance);
     }
 
-    
+## 利用给定数组构造二叉树
+> 已知量是数组int[]，未知量是二叉树，条件是满足二叉树条件
+> 想一想，二叉树有什么特点，是不是遇到过类似的问题，想一想，联系二叉树和数组的二叉树有哪些？这个最容易想到的是完全二叉树，因为按层次排列，形成的都是连续的，和数组一一对应，所以不妨构造一个完全二叉树，将二叉树转化为完全二叉树
+> 观察未知量：完全二叉树的特点，如果一个节点的序号为x，那么子节点的序号为2*x+1和2*x+2，如果设根节点的序号为0，那么左节点必然为奇数，右节点为偶数，所以设总共有n个节点时，最后一个节点的序号值为n-1
+* 2 * x + 1 = n - 1 // 左节点, n为偶数
+* 2 * x + 2 = n - 1 // 右节点, n为奇数
+=> n为偶数时 x = (n-2) / 2 => x = n/2 - 1
+=> n为奇数是 x = (n - 3) / 2 => x = (n-1) / 2 - 1
+由下取整的定义即可至 => x = ceiling(n/2) - 1, 即最后一个父节点的索引为 ceiling(n/2) -1
+> 由完全二叉树的定义，可知，除了最后一个父节点，其余父节点均带两个子节点，故我们只需要将父节点全部套上子节点即可
+> 返回根节点
+>
+    public TreeNode createTree(int[] value){
+        int n = value.length;
+        // 异常情况
+        if(n == 0){
+            return null;
+        }
+        if(n == 1){
+            return new TreeNode(value[0]); // 返回当前节点
+        }
+        ArrayList<TreeNode> nodeList = new ArrayList<>(); 
+        // 将每个值变成节点
+        for(int i =0; i <n; i++){
+            nodeList.add(value[i]);
+        }
+        int lastParentIndex = n /2 -1;
+        // 遍历父节点，最后一个父节点除外，因为可能包含一个或两个
+        for(int i = 0; i < lastParentIndex; i++){
+            TreeNode parent = nodeList.get(i); // 获取第i个节点
+            parent.left =  new TreeNode(value[2*i + 1]);
+            parent.right = new TreeNode(value[2*i + 2]);
+        }
+        // 最后一个节点，需要判断有几个子节点
+        nodeList.get(lastParentIndex).left = new TreeNode(value[2*lastParentIndex + 1]);
+        if( 2*lastParentIndex + 2 == n -1){
+            nodeList.get(lastParentIndex).right = new TreeNode(value[n-1]);
+        }
+        return nodeList.get(0);
+    }
+
+
+## 构造一个二叉查找树
+> 已知量为数组，未知量为二叉查找树
+> 构造二叉查找树就是不点构造二叉树本质上来说就是不断插入，即不断调用二叉树的插入过程,
+    public TreeNode createBinaryTree(int[] value){
+        int len = value.length;
+        if(len == 0){
+            return null;
+        }
+        TreeNode root = new TreeNode(value[0]);
+        for(int i = 1; i < len; i++){
+            insertTree(root, new TreeNode(value[i]));
+        }
+        return root;
+    }
 
 ## 给定n，求1，2， 3， ..., n组成的二叉查找树的数目
 > 利用动态规划的思想进行
+c
