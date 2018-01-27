@@ -103,7 +103,8 @@ public void levelIter(TreeNode root){
 // 删除有两种删除法，一种是给一个Node,利用换位的思想直接删除，另一种是根据遍历获取值的方式
 // 没有头指针的写法需要分情况讨论
 // 有头指针时，只需要让prev = head; c = head.next; 便可以完美解决问题
-    pubic boolean(ListNode head, int val){
+// 返回头结点
+    pubic ListNode remove(ListNode head, int val){
         if(head == null){
             return false;
         }
@@ -127,6 +128,6 @@ public void levelIter(TreeNode root){
             prev = c; 
             c = next; 
         }
-        
+        return next;  
     }
 
