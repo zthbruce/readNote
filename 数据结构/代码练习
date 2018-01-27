@@ -99,5 +99,34 @@ public void levelIter(TreeNode root){
     }
 }
 
-// 怎么判断
+// 链表删除操作
+// 删除有两种删除法，一种是给一个Node,利用换位的思想直接删除，另一种是根据遍历获取值的方式
+// 没有头指针的写法需要分情况讨论
+// 有头指针时，只需要让prev = head; c = head.next; 便可以完美解决问题
+    pubic boolean(ListNode head, int val){
+        if(head == null){
+            return false;
+        }
+        ListNode prev = head;
+        ListNode c = prev; // 将上个节点保留
+        while(c!=null){
+            ListNode next = c.next; // 获取下一个值
+            // 关键在于判断是不是第一个
+            if(c.val == val){
+                // 说明是头结点
+                if(prev == c){
+                    // 让后面那个节点顶上来,头结点没有prev
+                    c = next;
+                }
+                // 不是头结点
+                else{
+                    prev.next = next;
+                }
+                return true;
+            }
+            prev = c; 
+            c = next; 
+        }
+        
+    }
 
