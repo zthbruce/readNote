@@ -131,3 +131,216 @@ public void levelIter(TreeNode root){
         return next;  
     }
 
+
+import java.util.HashMap;
+public class Solution {
+    // 创建HashMap作为查询索引
+    HashMap<Integer, Integer> inIndex;
+    // 利用递归的思想进行重建
+    // 熟悉先序遍历的结构和中序遍历的结构，中序遍历左半边和右半边分别为root的左子树和右子树
+    public TreeNode reConstructBinaryTree(int[] pre, int preStart, int preEnd, int[] in, int inStart, int inEnd){
+        // 异常情况,为叶子节点准备
+        if(preStart > preEnd || inStart > inEnd){
+            return null;
+        }
+        // 申明类当然是用new
+        TreeNode root = new TreeNode(pre[preStart]); // 第一个节点即为root
+        for(int i = ; i < in.length; i++){
+            if(in[i] == pre[preStart]){
+               	int rootIndex = i;
+     			root.left = reConstructBinaryTree(pre, preStart+1, preStart + rootIndex - inStart,in, inStart, rootIndex - 1);
+        		root.right = reConstructBinaryTree(pre, preStart + rootIndex - inStart +1, preEnd, in, rootIndex + 1, inEnd);
+                break;
+            }
+        }
+        // int rootIndex = inIndex.get(pre[preStart]);
+        // 假设左子树，右子树均已经创建完毕
+        // 注意引入哪部分数据这是根据左子树,右子树的长度来计算
+        return root;
+    }
+    public TreeNode reConstructBinaryTree(int [] pre,int [] in) {
+        int preLen = pre.length;
+        int inLen = in.length;
+        // 异常情况
+        if(preLen < 1 || inLen < 1){
+            return null;
+        }
+        // 构建HashMap
+        for(int i = 0; i < inLen; i++){
+            inIndex.put(in[i], i);
+        }
+        // 将树进行递归
+        return reConstructBinaryTree(pre, 0, preLen - 1, in, 0, inLen - 1);  
+    }
+}
+
+// 利用队列来实现栈的功能，也类似的想法，将出队到另一个队列
+
+
+    // 非递归写法
+    public ListNode Merge(ListNode list1,ListNode list2) {
+        // 异常情况
+        if(list1 == null){
+            return list2;
+        }
+        if(list2 == null){
+            return list1;
+        }
+		// 先定义头结点
+        ListNode newHead;
+        ListNode p1 = list1;
+        ListNode p2 = list2;
+        // list2作为头
+        if(p1.val > p2.val){
+            newHead = p2;
+            p2 = p2.next;
+        }
+        else{
+            newHead = p1;
+            p1 = p1.next; 
+        }
+        ListNode tmpHead = newHead; // 拿来遍历所用
+        while(p1!=null&&p2!=null){
+            if(p1.val > p2.val){
+                tmpHead.next = p2;
+                p2 = p2.next;
+            }
+            else{
+                tmpHead.next = p1;
+                p1 = p1.next;
+            }
+            tmpHead = tmpHead.next; // 遍历到最后一个点
+        }
+        
+        // 如果有p1或者p2没有结束
+        if(p1!=null){
+            tmpHead.next = p1;
+        }
+        if(p2!=null){
+            tmpHead.next = p2;
+        }
+        return newHead;
+    }
+
+
+    public class Solution {
+    // 判断是否是子树
+    // 已知量：A,B两棵子树
+    // 未知量：两者之间的关系
+    // 子结构，应该是说数值上会有一个子关系
+    // 如果左子树和右子树
+    // 假如左子树和右子树中已经能够判断
+    // root1和root2如果相等的话，判断root1子树和root2子树的关系
+    // root1和root2如果不相等，判断root1的子树的结构和root2的结构
+    // 考虑问题：如果有节点相等怎么办？
+    // 如果这个问题：则需要遍历root1的节点
+    // 这个写法虽然比较简洁，但是时间复杂度却上升了
+    public boolean HasSubtreeFromRoot(TreeNode root1,TreeNode root2) {
+        // root2如果为null，必然是正确的,root1不管是有值还是没值，都是正确的
+        if(root2==null){
+            return true;
+        }
+        // 如果root2有值，root1没有值，那么必然不正确
+        else if(root1==null){
+            return false;
+		}
+        // 然后是两者都有值
+        // 先比较根节点，再比较子树
+        // 如果相等再看有没有子树，都有子树就进行比较，否则无需比较, 这句话可以写到终止条件里
+        if(root1.val == root2.val){
+            return  HasSubtreeFromRoot(root1.left, root2.left) && HasSubtreeFromRoot(root1.right, root2.right);
+        }
+        else{
+            return false;
+        }
+    }
+    
+    public boolean HasSubtree(TreeNode root1,TreeNode root2) {
+        // 通过递归遍历root1的节点
+        // 异常情况,当root1为空时或者root2为空时，均不是子树
+        if(root1 == null || root2 == null){
+            return false;
+        }
+        return HasSubtreeFromRoot(root1, root2) || HasSubtree(root1.left, root2) || HasSubtree(root1.right, root2);
+    }
+}
+
+
+
+    public boolean IsPopOrder(int [] pushA,int [] popA) {
+      	// 异常情况
+        if(pushA.length < 1){
+            return false;
+        }
+        // 构造索引
+        HashMap<Integer, Integer> pushIndex = new HashMap<Integer, Integer>();
+        for(int i = 0; i < pushA.length; i++){
+            pushIndex.put(pushA[i], i);
+        }
+       	// 遍历弹栈数组
+        // 取前面的最大索引
+        int prevPushMaxIndex = -1;
+        for(int i = 0; i < popA.length; i++){
+            // 异常判断,如果前后不一致
+            if(!pushIndex.containsKey(popA[i])){
+                return false;
+            }
+             // 出现后进后出的点，判断该点是否合理
+            if(i > 1 && pushIndex.get(popA[i]) - pushIndex.get(popA[i-1]) > 0){
+                // 判断之前出现的，有没有比该点更晚入栈，如果有则为false
+                if(prevPushMaxIndex > pushIndex.get(popA[i])){
+                    return false;
+                } 
+            }
+            // 获取的最大索引
+            if(pushIndex.get(popA[i]) > prevPushMaxIndex){
+                prevPushMaxIndex = pushIndex.get(popA[i]);
+            }
+        }
+        return true;
+    }
+
+
+    import java.util.ArrayList;
+
+public class Solution {
+    // known variable: root of BST
+    // unknown: head of DoubleLinkedList
+    // InOrderTraverse of BST can be order increasing
+    // we could create linkedList then add left and right
+    
+    ArrayList<TreeNode> nodeList = new ArrayList<>();
+    public void InOrderTraverse(TreeNode root){
+       if(root==null){
+            return;
+        }
+        InOrderTraverse(root.left);
+        nodeList.add(root);
+        InOrderTraverse(root.right);
+    }
+    public TreeNode Convert(TreeNode pRootOfTree) {
+        // end condition
+        if(pRootOfTree==null){
+            return null;
+        }
+		InOrderTraverse(pRootOfTree);
+        // traverse end
+        int len = nodeList.size();
+        for(int i = 0; i < len; i++){
+            TreeNode node = nodeList.get(i);
+            if(i-1>=0){
+                node.left = nodeList.get(i-1);
+            }
+            else{
+                node.left = null;
+            }
+            if(i+1<len){
+                node.right = nodeList.get(i+1);
+            }
+            else{
+                node.right = null;
+            }  
+        }
+        return nodeList.get(0);
+    }
+}

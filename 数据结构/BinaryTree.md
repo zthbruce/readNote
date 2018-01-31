@@ -70,25 +70,25 @@ public class TreeNode{
 ### 中序遍历
 > 先访问左子树，再访问根节点，后访问右子树
 >
-    public void preOrder(TreeNode root){
+    public void inOrder(TreeNode root){
         // 终止条件
         if(root==null){
             return;
         }
-        preOrder(root.left);
+        inOrder(root.left);
         System.out.println(root.val);
-        preOrder(root.right);
+        inOrder(root.right);
     }
 ### 后序遍历
 > 先访问左子树，再访问右子树，再访问根节点
 >
-    public void preOrder(TreeNode root){
+    public void postOrder(TreeNode root){
         // 终止条件
         if(root==null){
             return;
         }
-        preOrder(root.left);
-        preOrder(root.right);
+        postOrder(root.left);
+        postOrder(root.right);
         System.out.println(root.val);
     }
 
@@ -394,7 +394,7 @@ public class TreeNode{
 
 ## 输入一个二叉树和一个整数，打印出节点值之和等于该整数的所有路径
 > 首先说一说所谓路径：一般来说，路径指的是从根节点到叶子节点的节点序列;
-> 实际上递归本身就是压栈，而每次递归都会就增加了一个新的元素，为了找出所有的路径，我们需要一种随着本层递归结束就弹出加入元素的数据结构，满足后进先出的数据结构就是栈，此处非常巧妙，应该多联系这个题目，能对栈这种数据结构带来的神奇效应有更好的理解。
+> 实际上递归本身就是压栈，而每次递归都会就增加了一个新的元素，为了找出所有的路径，我们需要一种随着本层递归结束就弹出加入元素的数据结构，满足后进先出的数据结构就是栈，此处非常巧妙，应该多练习这个题目，能对栈这种数据结构带来的神奇效应有更好的理解。
 > 输入为: 二叉树树根和待求整数
 >
     public void finPath(TreeNode root, int sum){
