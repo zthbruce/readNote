@@ -16,6 +16,8 @@
     char x = s2.charAt(1); // 'r'
 > String获取索引
     int index = s2.indexOf('r') // 1
+> String将char[]转化为String
+    String s = String.valueOf(s2Char); // "bruce"
 ## StringBuider主要用法
 > StringBuilder申明
     StringBuilder s3 = new StringBuilder(s2.substring(2, 5));
