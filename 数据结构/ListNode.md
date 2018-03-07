@@ -434,3 +434,47 @@ fast相对于slow的速度为v, 那么追上slow的时间t = s / v <= l / v;
         }
         return head;
     }
+
+## 有序链表中删除重复的节点
+> 该类题目有两种类型：(1) 去重(保留重复过的一个结点) (2) 将重复过的节点全部删去
+### 保留重复的节点(去重)
+> 可以采用前驱节点的方法，一旦发生不同，前驱节点就指向
+    public ListNode deleteDuplicate(ListNode head){
+        // abnormal situation
+        if(head==null || head.next = null){
+            return head;
+        }
+        ListNode prev = head;
+        ListNode tmp = head;
+        while(tmp != null){
+            if(tmp.val != prev.val){
+                prev.next = tmp;
+                prev = tmp;
+            }
+            tmp = tmp.next; // 遍历head
+        }
+        prev.next = null; // 最后一个节点指向->null
+        return head;
+    }
+### 将重复节点也一同删除
+    public ListNode deleteDuplicate(ListNode head){
+        // abnormal situation
+        if(head==null || head.next == null){
+            return head;
+        }
+        // 遍历节点，如果和后者不相等，那么不是重复
+        if(head.val != head.next.val){
+            head.next = deleteDuplicate(head.next); // 后面节点做删除
+            return head;
+        }
+        // 如果和后面相等，那么遍历
+        else{
+            int val = head.val;
+            head = head.next.next;
+            while(head != null && head.val==val){
+                head = head.next;
+            }
+            // 直到不相等为止
+            return deleteDuplicate(head);
+        }
+    }

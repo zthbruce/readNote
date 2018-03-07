@@ -344,3 +344,107 @@ public class Solution {
         return nodeList.get(0);
     }
 }
+
+
+    public int InversePairs(int [] array) {
+       int len = array.length;
+       if(len < 1){
+           return 0;
+       }
+       int count = 0;
+       for(int i = 0; i < len - 1; i++){
+           for(int j = i; j < len-1; j++){
+               if(array[j] > array[j+1] ){
+                   count++;
+               }
+           }
+       }
+      return count % 1000000007;
+    }
+
+
+    public class Solution {
+    // init thought is traverse compare each other N(N-1)/2
+    // the time is too much
+    // can we reduce it to O(N*log(N)) use partition and then merge
+    // merge Sort can be used
+    
+    // aux function
+    // use thought like merge sort
+    public int merge(int[] array, int left, int mid, int right){
+        // abnormal situation
+        if(left>=right){
+            return 0;
+        }
+        // first part index is between left and mid
+        // second part index is between mid+1 and right
+        int[] tmp = new int[right-left+1]; // init tmp array
+        int current = right - left;
+        int i = mid; // the end  of left part
+        int j = right; // the end of right part
+        int pairNum = 0;
+        // compare from the end
+        while(i>=left && j>=mid+1){
+            if(array[i] > array[j]){
+                tmp[current--] = array[i--]; 
+                pairNum += j - mid; // get the length          
+            }else{
+                tmp[current--] = array[j--]; 
+            }
+        }
+        while(i>=left){
+            tmp[current--] = array[i--]; 
+        }
+        while(j>=mid+1){
+            tmp[current--] = array[j--]; 
+        }
+
+        // update the original array
+        for(int k = 0; k < right-left+1; k++){
+            array[k+left] = tmp[k];
+        }
+        return pairNum; // 
+    }
+    // aux function
+    // left is the start index
+    // right is the end index
+    public int InversePairs(int[] array, int left, int right){
+        // base condition
+        if(left>=right){
+            return 0;
+        }
+        int mid = (left + right) / 2; // floor int`
+        // mergeSort can get the pairNumber between two part
+        return merge(array, left, mid, right) + InversePairs(array, left, mid) + InversePairs(array, mid+1, right);
+    }
+    
+    public int InversePairs(int [] array) {
+       int len = array.length;
+       if(len < 1){
+           return 0;
+       }
+      return InversePairs(array, 0, len-1) % 1000000007;
+    }
+}
+
+// 
+各位上会出现几个1
+/10 之后出现，当前位数
+/100 %100
+
+
+MACD策略研究
+研究这个策略在聚宽网上的回测情况
+1. 买入逻辑：
+    a. MACD(15, 60, 9), 昨日MACD<昨日signal, 今日MACD >= 今日signal
+    b. 今日signal>0
+    c. 今日MACD>昨日MACD, 今日signal>昨日signal
+2. 全局变量:
+    a. 初始投资：20w
+    b. 每笔投资占最新账户资金20%，交易成本1‰
+3. 卖出逻辑:
+    a.止盈：单笔投资盈利>10%, 继续持有，收益率比下跌2%则卖出这笔投资的所有股票
+    b.止损：单笔投资亏损<-2%, 则卖出所有这笔投资的股票
+4. 其他说明：
+    a. 如果一次交易遇到多只股票发生交易信号，优先购买价格便宜的股票
+    b. 账户可交易的剩余资金不足20%，但是仍有出现交易信号的股票，则以100股为单位，花光账户剩余资金(包含手续费)
