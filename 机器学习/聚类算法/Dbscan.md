@@ -51,7 +51,7 @@ expandCluster(P, NeighborPts, C, eps, MinPts) {
          if sizeof(NeighborPts') >= MinPts
             NeighborPts = NeighborPts joined with NeighborPts'
       }
-      // 既不是核心点又不属于其他类
+      // 如果该点还没归类，就将该点归为该类
       if P' is not yet member of any cluster
          add P' to cluster C
    }
