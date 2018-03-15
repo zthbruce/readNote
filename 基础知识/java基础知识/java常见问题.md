@@ -12,4 +12,19 @@
 
 ### 如何实现在main方法执行前输出
 > 静态块在类被加载时就会被调用，因此可以在main()方法执行之前调用
-  
+public class Test{
+    public void main(String[] args){
+        System.out.println("Hello World2");
+    }
+    static{
+        System.out.println("Hello World1")
+    }
+}
+> 注意静态块不管顺序如何，都会在main()方法执行之前执行，这和Java程序的初始化顺序有关
+### java程序初始化的顺序
+> Java程序初始化顺序一般遵循3个原则(优先级递减)
+1. 优先级1 ：static 属性 / 静态块/ 方法
+2. 优先级2:：非静态属性/静态块加载
+3. 优先级3 ：非静态方法加载
+同类按照代码顺序即可
+注意：继承情况下父类优先加载

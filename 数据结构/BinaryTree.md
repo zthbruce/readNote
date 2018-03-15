@@ -546,4 +546,24 @@ public class TreeNode{
 
 ## 给定n，求1，2， 3， ..., n组成的二叉查找树的数目
 > 利用动态规划的思想进行
-c
+
+
+
+## 求二叉查找树的第k大的元素
+> 已知量：root, k
+> 未知量：第k大的元素
+> 假设该节点有多少个数，那么便可知第k大的在哪个位置
+> 
+    public TreeNode KthNode(TreeNode root, int k){
+        // 异常情况
+        if(root == null || k < 1){
+            return null;
+        }
+        // 记录经过的点数
+        int[] tmp = {k}; 
+        // 
+        inOrder
+        
+    }
+
+    

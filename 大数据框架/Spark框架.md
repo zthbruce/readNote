@@ -1,3 +1,53 @@
 # Spark框架
-## spark是当前最流行的分布式计算框架爱
-## 
+> spark是当前最流行的分布式计算框架
+## 概览
+> Spark集群上分为master节点和worker节点, 类似于hadoop的master和slave
+  Master节点上常驻Master守护进程，负责管理全部Worker节点
+  Worker节点上常驻Worker守护进程，负责master通信并管理
+  Driver是驱动程序，能够创造SparkContext
+
+> 每个Worker存在一个或多个ExecutorBackEnd进程，每一个进程都包含一个Exexutor对象，该对象拥有线程池，每个线程可以执行一个task
+
+> Job: 由action触发的动作，一旦执行了action，就会生成一个Job，有多少action就有多少个Job
+
+> Stage: 在宽依赖关系处就会断开依赖链，划分stage(宽依赖的地方就是需要shuffle的)
+ stage之间是有相互依赖
+
+> Task: 任务执行的最小单元，每个stage里面的task执行逻辑相同，只是喂给它的数据不同
+所以task才是spark并发执行的单位
+
+## 程序的执行内部逻辑
+> 应用创建之后，driver会生成SparkContext, SparkContext会向Cluster Manager申请Executor资源，并把job分解成一系列可执行的task，然后将task分发到各个Executor运行，Executor在task执行完毕之后就返回给SparkContext
+
+> 为了运行在集群上，SparkContext 可以连接至几种类型的 Cluster Manager（Standalone时为master，或者 Mesos，也可以使用 YARN），它们会分配应用的资源
+
+### 申请Executor资源
+> Spark向Cluster Manager申请资源的过程，整个过程如下:（以Standalone为例)
+1. SparkContext创建TaskSchedulerImpl，SparkDeploySchedulerBackend和DAGScheduler
+2. SparkDeploySchedulerBackend创建AppClient，并通过一些回调函数来得到Executor信息
+3. AppClient向Master注册Application
+4. Master收到RegisterApplication信息后，Master向Woker发送LaunchExecutor消息，同时向AppClient发送ExecutorAdded消息
+5. Worker创建ExecutorRunner，并向Master发送ExecutorStateChanged的消息
+6. ExecutorRunner创建CoarseGrainedSchedulerBackend
+7. CoarseGrainedExecutorBackend向SparkDeploySchedulerBackend发送RegisterExecutor消息
+8. CoarseGrainedExecutorBackend在接收到SparkDeploySchedulerBackend发送的RegisteredExecutor消息后，创建Executor
+
+### Job分解成task,分发给Executor
+1. DAGScheduler接收用户提交的job
+> 用户提交Job后，SparkContext通过runJob()调用DAGScheduler的runJob()。在runJob()中，调用submitJob来提交Job，然后等待Job的运行结果。
+2. DAGScheduler将job分解成stage
+> 首先每个job自动产生一个finalStage
+> submitStage函数递归得到整个stage DAG，如果所有stage完成则调用submitMissingTasks(()把每个stage拆分成可运行的task。
+3. DAGScheduler把每个stage拆分为可并行计算的task， 并将所有task提交到TaskSchedulerImpl
+> submitMissingTasks产生出与partition数量相等的task，并封装成TaskSet，提交给TaskSchedulerImpl
+> TaskSchedulerImpl的submitTasks将TaskSet封装成TaskSetManager，放入调度器（schedulableBuilder）等待调度（Spark有两种调度方式：FIFO和Fair。注意只调度同一SparkContext下的任务）。之后调用SparkDeploySchedulerBackend的reviveOffers()。TaskSetManager主要用来调度一个TaskSet内的task，比如，为给定的executor分配一个task。
+4. SparkDeploySchedulerBackend调用Executor执行task
+> 首先通过resourceOffers得到在哪个Executor运行哪个task的信息，然后调用launchTasks向Executor发送task
+5. CoarseGrainedExecutorBackend在接收到LaunchTask后，调用Executor的launchTask运行task。
+> Executor的内部是一个线程池，每一个提交的task都会包装为TaskRunner交由threadpool执行。
+> 在TaskRunner中，task.run()真正运行每个task的任务
+> 最终，每个task的运行都会调用iterator()来迭代计算RDD。下面是以ShufflerMapTask为例，rdd.iterator(partition, context)会从根partition来计算这个task的输出partition。
+
+
+## Spark shuffle过程
+> 
