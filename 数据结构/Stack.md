@@ -53,8 +53,7 @@
 
 ## 使用两个队列实现栈
 > 使用两个队列实现栈的原理：利用队列1实现入队，利用队列2作为缓存，队列1中出队即可，设当前队列1里数为1，2，3，那么出队时，先将1，2入队至队列2，然后将3出队，最后将队列2中的元素重新入队，这个想法也是66的
-> java中采用LinkedList实现了队列这种数据结构
-> 
+> 先写出了以下这版
     // 栈结构
     public class Stack{
         Queue<Integer> queue1 = new LinkedList<>();
@@ -83,7 +82,43 @@
             return result;
         }
     }
-
+> 这一版出现，有了不必要的开销，就是将入栈，出栈的队列固定了之后，会导致需要多做一些操作，在时间复杂度上做优化的话，可以使一个队列为空，一个队列有值。入栈：如果一开始两个队列都为空的话，那么任取一个队列(queue1)即可，否则取不为空的队列入栈 出栈：将不为空的前n-1个数据出队到另一个队列，然后将最后一个元素出队
+> 
+public class stack{
+    Queue<Integer> queue1 = new LinkedList<>();
+    Queue<Integer> queue2 = new LinkedList<>();
+    // 入栈
+    public void push(int v){
+        if(!queue1.isEmpty()){
+            queue1.offer(v);
+        }else{
+            queue2.offer(v);
+        }
+    }
+    // 出栈
+    // 看那个队列不为空
+    public int pop(){
+        // 异常情况
+        if(queue1.isEmpty() && queue2.isEmpty()){
+            return null;
+        }
+        // 如果queue1不为空
+        if(!queue1.isEmpty()){
+            while(queue1.size()>1){
+                queue2.add(queue1.poll());
+            }
+            return queue1.poll();
+        }
+        // queue2不为空
+        else{
+            // 将queue1de1接入
+            while(queue2.size()>1){
+                queue1.add(queue2.poll());
+            }
+            return queue2.poll();
+        }
+    }
+}
 ## 最小栈问题
 > 以O(1)的时间复杂度实现栈中最小元素
 > 最小栈问题，一般的遍历，会设置一个变量min，每次入栈会比较与min的大小，但是如果有元素出栈，min应该怎么办呢？解决方法是添加一个辅助栈(以空间为代价，减少时间复杂度)

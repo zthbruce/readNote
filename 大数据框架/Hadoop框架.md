@@ -34,12 +34,12 @@ hdfs主要由3个组件构成，分别为NameNode, SecondaryNameNode, DataNode, 
 2. 文件目录的所有者及其权限
 3. 文件包括哪些文件块以及每个文件块的名
 
-> 需要注意的是，NameNode元信息并不保存每个块的位置信息，这些信息会在NameNode启动时从各个DataNode获取并保存在内存中，放在内存中会减少查询时间。NameNode会通过心跳机制
-检查DataNode是否运行正常。NameNode只保存各个块的名称以及文件由哪些块组成
+> 需要注意的是，NameNode元信息并不保存每个块的位置信息，这些信息会在NameNode启动时从各个DataNode获取并保存在内存中，放在内存中会减少查询时间。NameNode会通过心跳机制检查DataNode是否运行正常。NameNode只保存各个块的名称以及文件由哪些块组成
 
 > 一般来说，一条元信息记录会占用200byte内存空间。假设块大小为64MB，备份数量是3 ，那么一个1GB大小的文件将占用16*3=48个文件块。如果现在有1000个1MB大小的文件，则会占用1000*3=3000个文件块（多个文件不能放到一个块中）。我们可以发现，如果文件越小，存储同等大小文件所需要的元信息就越多，所以，Hadoop更喜欢大文件。
 
 > 运行NameNode会占用大量内存和I/O资源，一般NameNode不会存储用户数据或执行MapReduce任务。
+
 > 元信息的持久化
 在NameNode中存放元信息的文件是 fsimage。在系统运行期间所有对元信息的操作都保存在内存中并被持久化到另一个文件edits中。并且edits文件和fsimage文件会被SecondaryNameNode周期性的合并
 
@@ -122,7 +122,68 @@ DistributedFileSystem会发送给NameNode一个RPC调用，在文件系统的命
 5. A服务器将结果数据序列化之后，发送给服务器A，服务器A再进行反序列化，恢复为内存中的形式，交给服务器A上的应用
 
 
+## MapReduce
+> MapReduce 本身是一种编程模型，用于大规模数据的分布式计算
+> 该模型的架构上，大致分为三个步骤，Map -> Shuffle -> Reduce，从时间顺序来说，大致分为5个阶段
+> 输入分片（input split）、map阶段、shuffle阶段和reduce阶段。
+> 官方给出的流程图如下：
+![map-reduce](pic/Map-Reduce.png)
+### 输入分片(数据分区)：进行map计算之前，会根据输入文件的hdfs block进行分区，通常来说，一个block的数据会在一个分区里面
+    可以利用paritioner进行重新分区，使每个分区的数据分布均匀
+    MapReduce调优方向1(减少数据倾斜，使数据分布尽量均匀)
+
+### map阶段：mapper函数(映射器)对本机存储的数据记性函数映射，map阶段是否会进行排序呢？
+如果map之后需要进行reduce，那么map阶段会进行排序，如果没有的话，则不会进行排序直接写入hdfs中。
+因为本质上，map shuffle才是完成排序的阶段。
 
 
+### Shuffle阶段
+>shuffle阶段简单来说就是重新分区的意思，将处于相同分区的数据fetch到一个partition里面，然后重新Sort一下再提 供给reducer. >Shuffle阶段横跨map阶段和reduce阶段，分为Map Shuffle 和 Reduce Shuffle两个阶段
+#### Map Shuffle(对应Spark中的Shuffle Write)
+> Map阶段的shuffle过程是对Map结果进行分区，排序，分割，然后将属于同一分区的输出合并在一起并写在磁盘上，最终得到一个分区有序的文件。分区有序的意思是map输出的key/value按照分区进行排列，具有相同partition的存储在一起，partition内的按照key值升序排列
+1. Partition
+> 对于map输出的每一个键值对，系统都会给定一个partitioner， partition值计算默认是通过hash值 % Reducer个数得到。partition对应处理该数据的reducer
+> 如果默认情况下，数据集在分区内的分布很不均匀，或者说我们需要满足某一规律的key值数据放在一个Reduce阶段处理，则需要自己编写Partitioner进行分区。但是必须保证，相同key值的键值对分发到同一个Reducer。这是Map Reduce的调优方向。
+
+2. Collector
+> Map输出的结果是由Collector处理的，每个Map任务不断将键值对输出到内存中一个环形的数据结构中。使用环形数据结构，目的是为了更有效的利用内存空间，在内存中放置尽可能多的数据(数据优先放在内存中，处理速度快)
+> 数据结构是个字节数组，叫Kvbuffer，名如其义，里面不仅存放数据，还存放索引数据，给放置索引数据的取余叫kvmeta，包含一个四元组
+(key的位置，value的位置，partition值，value的长度)，两者位于两个区域，区域的分界点初始为0，每一次spill都会更新分界点.
+> KvBuffer是内存中的结构，随着数据的输入，KVBuffer中的数据总有不够用的一天，这是Spill过程就会触发了
+> 关于Spill触发的条件，也就是Kvbuffer用到什么程度开始Spill，还是要讲究一下的。如果把Kvbuffer用得死死得，一点缝都不剩的时候再开始Spill，那Map任务就需要等Spill完成腾出空间之后才能继续写数据；如果Kvbuffer只是满到一定程度，比如80%的时候就开始Spill，那在Spill的同时，Map任务还能继续写数据，如果Spill够快，Map可能都不需要为空闲空间而发愁。两利相衡取其大，一般选择后者。Spill的门限可以通过io.sort.spill.percent，默认是0.8
+> spill这个重要的过程是由Spill线程承担，spill线程干的活叫SortAndSpill,顾名思义，在Spill之前还进行Sort操作
+(此过程受争议，Spark1.2.0之前为Hash-Based，之后默认设为Sort-Based)
+
+3. Sort
+当Spill触发后，SortAndSpill先把KvBuffer中的数据按照partition值，key值进行二次排序，使得最终的结果是按照partition进行聚集，同一partition的key值升序排列
+
+4. Spill
+> spill线程为这次Spill过程创建一个磁盘文件：类似于spil1l2.out的文件。Spill把kvbuffer中的数据按照partition进行溢，写，直到遍历完所有的partition。 一个partition在文件中称为segment(段)。在这个过程中如果用户配置了combiner,那么在写之前会调用combineAndSpill,对结果做进一步合并之后再写出。
+所有的partition对应的数据都放在这个文件里，虽然是顺序存放的，但如何知道在这个文件中的起始位置，以供读取呢？有一个三元组索引这时就出场，三元组包括(起始位置，原始数据长度，压缩之后的数据长度)，一个partition对应一个三元组。
+> combiner：combiner其实就是一个本地的reducer，当mapper生成的数据过多时，带宽会成为瓶颈，combiner将本地的key值聚合，实现一次合并，减少本地文件数目，最大限度的减少提高网络IO效率。
+MapReduce调优方向2(使用combiner优化IO瓶颈)
+但是combiner操作是有风险的，使用它的原则是combiner的输入不会影响到reduce计算的最终输入，例如：如果计算只是求总数，最大值，最小值可以使用combiner，但是做平均值计算使用combiner的话，最终的reduce计算结果就会出错。
+5. Merge
+> map的任务如果数据量很大，可能会进行好几次Spill,out文件和index文件回产生很多，分布在不同的磁盘桑，这时需要把这些文件合并成一个大文件。所以最终把这些文件进行合并的Merge登场，称为merge on disk
+> Merge过程通过扫描所有本地目录，将数据文件和索引文件的路径存储在一个数组里面。如果内存足够的话，可以将路径保存在内存中，省去全盘扫描这一步
+> 为merge过程创建一个file.out和file.out.index的文件用来存储最终的输出文件。同样按照partition进行遍历。对于某个partition来说，从索引列表中查出所有索引信息，将对应的segment插入到段列表中。然后对这个partition对应的所有Segment进行合并，合并成一个segment。具体过程会分批的进行合并，将第一批的segment进行归并排序(因为已经排序，所以此处也可以采用最小堆的方式进行合并)，输出到一个临时segment，然后重新加入段列表，再进行第二批，直至只存在一个segment，就将segment输出到file.out，索引文件也随之更新。最终的索引文件仍然输出到index文件。
+
+> 至此，Map Shuffle已经结束
+
+#### Reduce Shuffle(对应Spark的Shuffle Read)
+> 在Reduce端，shuffle主要分为复制Map输出，排序两个阶段
+1. Copy(对应Spark中的fetch)
+> Reduce任务通过HTTP向各个Map任务拖取所需要的数据。Reduce会定期向JobTracker获取Map的输出位置，一旦拿到输出位置，Reduce任务就会从此输出对应的TaskTracker上复制输出到本地，而不会等到所有的Map任务结束。
+2. Merge Sort
+> reduce这边的merge sort是针对不同的Map上的key值和在一块未必是有序的情况，因为MapShuffle中的Merge之后，同一个Map必然是有序的，所以这里的mergeSort实际上就是归并排序的归并过程，归并之后即为整体有序的。Reduce端的排序就是一个逐渐合并的过程
+> 一般Reduce是一边copy一边sort，即copy和sort两个阶段是重叠而不是完全分开的。
+> 这个过程中，也会出现溢写的情况，所有如果定义过combiner，此处也会生效
+3. Group
+Sort完成之后进行分组，分组调用默认的GroupingComparator组件
+最终Reduce shuffle过程会输出一个整体有序且分好组的数据块。
+
+### Reduce阶段
+> 喂给Reducer的数据是<key, [value1, value2, value3, ...]>，后者是一个可迭代的对象，为了reduce函数的实现
+> 即reduce方法接收到的是同一个key的一组value，这也是Hadoop 已经实现好的分组功能
 
 
