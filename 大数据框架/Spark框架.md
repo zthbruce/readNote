@@ -79,6 +79,5 @@
 
 6. DriverActor 中的 launchTasks() 将每个 task 序列化，如果序列化大小不超过 Akka 的 akkaFrameSize，那么直接将 task 送到 executor 那里执行executorActor(task.executorId) ! LaunchTask(new SerializableBuffer(serializedTask))
 
-
 ## Spark shuffle过程
-> 
+> 见Shuffle过程.md

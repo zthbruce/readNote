@@ -29,3 +29,17 @@ public class Test{
 同类按照代码顺序即可
 注意：继承情况下父类优先加载
 > 静态内部类在使用的是时候再加载
+
+
+### java的集合框架
+> java的util包下，集合类时我们在开发中用的最多的工具类
+> 整个集合体系起源可以分为两个接口：Iterator和Map，其他都是基于这两个接口实现的
+> Iterator的子接口是Collection, Iterator的方法很少，只有三个：iterator(); forEach(Consumer action),spliterator();
+> 整个集合框架的体系可以看成两个节点出发：Collection 和 Map
+> Collection结构图如下：
+![Collection](pic/Collection.png)
+
+> Map的结构图如下
+![Map](pic/Map.png)
+
+### 

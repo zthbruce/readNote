@@ -433,7 +433,10 @@ public class Solution {
 /100 %100
 
 > 快排
-> 快排在于分治和插坑
+> 快排在于入坑分治
 public void qSort(int[] arr){
 
 }
+
+
+> 

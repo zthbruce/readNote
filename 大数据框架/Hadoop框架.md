@@ -132,7 +132,7 @@ DistributedFileSystem会发送给NameNode一个RPC调用，在文件系统的命
     可以利用paritioner进行重新分区，使每个分区的数据分布均匀
     MapReduce调优方向1(减少数据倾斜，使数据分布尽量均匀)
 
-### map阶段：mapper函数(映射器)对本机存储的数据记性函数映射，map阶段是否会进行排序呢？
+### map阶段：mapper函数(映射器)对本机存储的数据进行函数映射，map阶段是否会进行排序呢？
 如果map之后需要进行reduce，那么map阶段会进行排序，如果没有的话，则不会进行排序直接写入hdfs中。
 因为本质上，map shuffle才是完成排序的阶段。
 
