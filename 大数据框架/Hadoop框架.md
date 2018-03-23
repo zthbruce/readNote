@@ -19,7 +19,7 @@
 hdfs主要由3个组件构成，分别为NameNode, SecondaryNameNode, DataNode, HDFS是以master-slave模式运行，其中NameNode和SecondaryNameNode是在master上面运行，dataNode是在slave节点上
 
 ### DataNode(数据节点)
-> 和普通的文件系统类似，hdfs也会把文件分块来存储。普通文件系统采用的磁盘块数据大小一般为512B，hdfs通常的数据块是64M。为什么数据块这么大呢，因为数据块较大可以增大数据的吞吐量，减少寻址的累计时间，假设寻址时间为10ms，磁盘传输速率为100M/s，那么获取相同大小的数据，必然是数据块越大可以减少寻址的次数。但是数据块太大也不好，块过大会导致任务数量过少，不利于并发度，降低作业的处理速度
+> 和普通的文件系统类似，hdfs也会把文件分块来存储。普通文件系统采用的磁盘块数据大小一般为512B，hdfs通常的数据块是128M。为什么数据块这么大呢，因为数据块较大可以增大数据的吞吐量，减少寻址的累计时间，假设寻址时间为10ms，磁盘传输速率为100M/s，那么获取相同大小的数据，必然是数据块越大可以减少寻址的次数。但是数据块太大也不好，块过大会导致任务数量过少，不利于并发度，降低作业的处理速度
 
 >hdfs按块存储还有如下好处：
 1. 文件可以任意大，也不用担心单个结点磁盘容量小于文件的情况
@@ -56,7 +56,7 @@ edits文件存在的目的是为了提高系统的操作效率，NameNode在更�
 2. SecondaryNameNode从NameNode请求fsimage和edits文件
 3. SecondaryNameNode把fsimage和edits文件合并成新的fsimage文件
 4. NameNode从SecondaryNameNode获取合并好的新的fsimage并将旧的替换掉，并把edits用第一步创建的edits.new文件替换掉
-5.更新fstime文件中的检查点
+5. 更新fstime文件中的检查点
 
 ### 数据备份
 > hadoop通过数据备份的方式实现容错，有备而无患
@@ -158,7 +158,7 @@ DistributedFileSystem会发送给NameNode一个RPC调用，在文件系统的命
 当Spill触发后，SortAndSpill先把KvBuffer中的数据按照partition值，key值进行二次排序，使得最终的结果是按照partition进行聚集，同一partition的key值升序排列
 
 4. Spill
-> spill线程为这次Spill过程创建一个磁盘文件：类似于spil1l2.out的文件。Spill把kvbuffer中的数据按照partition进行溢，写，直到遍历完所有的partition。 一个partition在文件中称为segment(段)。在这个过程中如果用户配置了combiner,那么在写之前会调用combineAndSpill,对结果做进一步合并之后再写出。
+> spill线程为这次Spill过程创建一个磁盘文件：类似于spil1l2.out的文件。Spill把kvbuffer中的数据按照partition进行溢写，直到遍历完所有的partition。 一个partition在文件中称为segment(段)。在这个过程中如果用户配置了combiner,那么在写之前会调用combineAndSpill,对结果做进一步合并之后再写出。
 所有的partition对应的数据都放在这个文件里，虽然是顺序存放的，但如何知道在这个文件中的起始位置，以供读取呢？有一个三元组索引这时就出场，三元组包括(起始位置，原始数据长度，压缩之后的数据长度)，一个partition对应一个三元组。
 > combiner：combiner其实就是一个本地的reducer，当mapper生成的数据过多时，带宽会成为瓶颈，combiner将本地的key值聚合，实现一次合并，减少本地文件数目，最大限度的减少提高网络IO效率。
 MapReduce调优方向2(使用combiner优化IO瓶颈)

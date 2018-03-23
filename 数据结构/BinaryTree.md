@@ -554,16 +554,41 @@ public class TreeNode{
 > 未知量：第k大的元素
 > 假设该节点有多少个数，那么便可知第k大的在哪个位置
 > 
-    public TreeNode KthNode(TreeNode root, int k){
+   TreeNode KthNode(TreeNode root, int k){
         // 异常情况
         if(root == null || k < 1){
             return null;
         }
-        // 记录经过的点数
-        int[] tmp = {k}; 
-        // 
-        inOrder
-        
+        // 用以存储还需要遍历多少个点
+        int[] item = {k}; 
+        // 利用中序遍历
+        return inOrder(root, item);
+    }
+    // 中序遍历递归
+    // 返回第k大的结果，以null和非null区分
+    TreeNode inOrder(TreeNode root, int[] item){
+        TreeNode result = null;
+        // 递归左子树，是否有结果
+        if(result == null && root.left != null){
+            result = inOrder(root.left, item); 
+        }
+        // 访问该节点
+        // 每访问一个，将需要访问的节点-1
+        if(result == null){
+            // 还需要遍历1个节点
+            if(item[0] == 1){
+                result = root;
+            }
+            // 
+            else{
+                item[0]--;
+            }
+        }
+        // 递归右子树
+        if(result == null && root.right!=null){
+            result = inOrder(root.left, k);
+        }
+        return result;
     }
 
     
