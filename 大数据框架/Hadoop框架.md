@@ -150,7 +150,7 @@ DistributedFileSystem会发送给NameNode一个RPC调用，在文件系统的命
 > 数据结构是个字节数组，叫Kvbuffer，名如其义，里面不仅存放数据，还存放索引数据，给放置索引数据的取余叫kvmeta，包含一个四元组
 (key的位置，value的位置，partition值，value的长度)，两者位于两个区域，区域的分界点初始为0，每一次spill都会更新分界点.
 > KvBuffer是内存中的结构，随着数据的输入，KVBuffer中的数据总有不够用的一天，这是Spill过程就会触发了
-> 关于Spill触发的条件，也就是Kvbuffer用到什么程度开始Spill，还是要讲究一下的。如果把Kvbuffer用得死死得，一点缝都不剩的时候再开始Spill，那Map任务就需要等Spill完成腾出空间之后才能继续写数据；如果Kvbuffer只是满到一定程度，比如80%的时候就开始Spill，那在Spill的同时，Map任务还能继续写数据，如果Spill够快，Map可能都不需要为空闲空间而发愁。两利相衡取其大，一般选择后者。Spill的门限可以通过io.sort.spill.percent，默认是0.8
+> 关于Spill触发的条件，也就是Kvbuffer用到什么程度开始Spill，还是要讲究一下的。如果把Kvbuffer用得死死的，一点缝都不剩的时候再开始Spill，那Map任务就需要等Spill完成腾出空间之后才能继续写数据；如果Kvbuffer只是满到一定程度，比如80%的时候就开始Spill，那在Spill的同时，Map任务还能继续写数据，如果Spill够快，Map可能都不需要为空闲空间而发愁。两利相衡取其大，一般选择后者。Spill的门限可以通过io.sort.spill.percent，默认是0.8
 > spill这个重要的过程是由Spill线程承担，spill线程干的活叫SortAndSpill,顾名思义，在Spill之前还进行Sort操作
 (此过程受争议，Spark1.2.0之前为Hash-Based，之后默认设为Sort-Based)
 
@@ -164,7 +164,7 @@ DistributedFileSystem会发送给NameNode一个RPC调用，在文件系统的命
 MapReduce调优方向2(使用combiner优化IO瓶颈)
 但是combiner操作是有风险的，使用它的原则是combiner的输入不会影响到reduce计算的最终输入，例如：如果计算只是求总数，最大值，最小值可以使用combiner，但是做平均值计算使用combiner的话，最终的reduce计算结果就会出错。
 5. Merge
-> map的任务如果数据量很大，可能会进行好几次Spill,out文件和index文件回产生很多，分布在不同的磁盘桑，这时需要把这些文件合并成一个大文件。所以最终把这些文件进行合并的Merge登场，称为merge on disk
+> map的任务如果数据量很大，可能会进行好几次Spill,out文件和index文件回产生很多，分布在不同的磁盘上，这时需要把这些文件合并成一个大文件。所以最终把这些文件进行合并的Merge登场，称为merge on disk
 > Merge过程通过扫描所有本地目录，将数据文件和索引文件的路径存储在一个数组里面。如果内存足够的话，可以将路径保存在内存中，省去全盘扫描这一步
 > 为merge过程创建一个file.out和file.out.index的文件用来存储最终的输出文件。同样按照partition进行遍历。对于某个partition来说，从索引列表中查出所有索引信息，将对应的segment插入到段列表中。然后对这个partition对应的所有Segment进行合并，合并成一个segment。具体过程会分批的进行合并，将第一批的segment进行归并排序(因为已经排序，所以此处也可以采用最小堆的方式进行合并)，输出到一个临时segment，然后重新加入段列表，再进行第二批，直至只存在一个segment，就将segment输出到file.out，索引文件也随之更新。最终的索引文件仍然输出到index文件。
 

@@ -136,7 +136,53 @@ java.lang.OutOfMemoryError: Java heap space
 > 数据倾斜问题是非常重要的问题，倾斜严重时会导致执行效率很低
 
 ### 如何定位该瓶颈
+#### 数据倾斜可能会产生的现象
 > 绝大多数task执行得都非常快，但个别task执行极慢。如：1000个任务，998个都在1分钟内执行完了，剩余2个task却要两个小时
 > 原本能够正常执行的Spark作业, 突然发生了OOM错误(堆空间溢出)
-### 调优
+#### 如何定位代码
+> 数据倾斜出现在Shuffle过程中。Spark中常用并且可能出现shuffle的算子：distinct, groupByKey, reduceByKey,aggregateByKey,join, cogroup, repartition
+1. 某个task执行特别慢的情况:
+通过Web_UI可以查询当前运行的task的时间，对于运行时间超长的task，定位该task属于哪个stage, 然后根据stage划分原理(发生shuffle的时候划分)，定位该stage位于代码的哪一块(以上述算子作为shuffle的标志位)
+2. 某个task莫名奇妙内存溢出的情况(OOM):
+> 查看Web_UI上报错的task的运行时间以及分配的数据量(shuffle read的量)，才能确定是否由数据倾斜导致的
+
+### 调优解决
+#### 查看key的分布
+1. 对于Spark SQL中的group by和 join语句导致的数据倾斜，使用SQL查询一下key值的分布情况(group by and count)
+2. 对于Spark的RDD执行shuffle导致的数据倾斜可用RDD.countByKey()
+
+#### 解决方案
+1. 过滤少数导致倾斜的key
+> 如果发现导致倾斜的key值就少数几个，而且对计算影响不大的话，那么很适合使用这种方案
+
+> 这个方案曾经用过：在泊位聚类的时候，有少部分区域的点数超级大，后来发现该区域主要除以锚地的区域，所以将对应的数据partitio的数据过滤，对结果不产生大影响
+
+> 方案优点：实现简单，而且效果也很好，完全规避了数据倾斜
+> 方案缺点：适用面太窄
+> 使用场景：
+    当异常的key值较少时，可采用这样的方案进行
+
+2. 提高Shuffle的并发度
+> 简单来说，在Map-reduce中就是增大reducer的数目，在Spark中指定shuffle read task的数目，该数默认是200, 对应很多场景都比较小, 举个例子来说reduceByKey(2000) 表示将shuffle read task的数目设置为2000
+> 原理：将原本属于一个task的key分到不同的task
+
+> 方案优点：操作简单，不需要多余逻辑
+> 方案缺点：缓和了数据倾斜，并没有解决本质问题：如果一个key值的数据就超级大，那么不论设多大，都不能解决该问题
+
+3. 局部聚合+全局聚合
+> 其实这个想法类似于map-reduce中spill过程中的combiner，先进性局部的reduce，然后进行溢写
+> 方案实现原理：
+    (1) 将原本key值加上一个随机前缀，将一个key值变成多个key值，即让一个task处理的key值分散到各个task中去做局部聚合
+    (2) 局部聚合完成后，将前缀去掉，这时数据量就大大减少了(取决于随机的范围)，然后在进行全局聚合，得到最终结果
+> 方案优点：对于聚合的shuffle情况，效果非常好，可以解决数据倾斜问题
+> 方案缺点：仅仅适用于聚合类的shuffle操作，对join和求平均值的一些shuffle操作就不能使用(类似于combiner)
+
+4. 将reduce join 转化为map join
+> 适用场景：做Join操作时，如果join两边的数据量差异很大
+> 方案实现原理：不适用join算子进行操作，将小RDD作为广播变量，然后大RDD适用map将小RDD获取，然后key值逐条对比，实现join操作。普通的join是会用shuffle，但该过程是map过程，不会产生shuffle，所以规避了数据倾斜的发生
+
+> 方案优点：对join操作导致的数据倾斜，效果非常好，因为根本就不会发生shuffle，也就根本不会发生数据倾斜。
+> 方案缺点：适用场景太少，只适用一个大表一个小表的情况
+
+
 

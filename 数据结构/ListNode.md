@@ -147,7 +147,7 @@
         ListNode slow = ListNode fast = head;
         // 条件中，前者针对奇数情况，后者针对偶数情况
         // 这种条件不是遍历，而是走到最后一个节点(或倒数第一个)即停
-        while(fast.next != null && fast.next.next != null){ 
+        while(fast.next != null && fast.next.next != null){
             fast = fast.next.next; // 走两步
             slow = slow.next; // 走一步
         }
@@ -190,7 +190,7 @@ fast相对于slow的速度为v, 那么追上slow的时间t = s / v <= l / v;
 (实际上如果路程为环长，那么在入口处就能第一次相遇，说明环长l=a;反过来亦说明当l = a时，两者第一次相遇就在环入口
     l + a = 2 * v * t; 
     a = v * t ;
-    => l = a; )
+    <=> l = a; )
 > 设相遇时slow节点距环口的距离为b, 设slow走了n步，则fast走了2*n步
     则slow节点走的路程为 a + b = n
     此时fast节点走的路程为 a + b + k * l = 2*n
@@ -423,7 +423,7 @@ fast相对于slow的速度为v, 那么追上slow的时间t = s / v <= l / v;
             return head1;
         }
         ListNode head = null; // 最好写上初始化
-        // 比较两个节点, 小者往前走
+        // 比较两个节点, 小者往前走, 只需要取出头结点即可，这是递归的做法
         if(head1.val < head2.val){
             head = head1;
             head.next = mergeSort(head1.next, head2);
