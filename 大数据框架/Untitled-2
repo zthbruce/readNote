@@ -1,0 +1,67 @@
+问题： 实现泊位的录入
+
+1. 码头的更新
+
+2. 泊位的更新
+涉及的表：terminal_detail
+
+输入参数：
+berthList(只要传入已选择的泊位即可)
+
+// 异常处理
+如果为空，那么将该码头进行删除
+删除Terminal和TerminalKey
+// 然后
+
+如果不为空
+(1) 将该码头的泊位标记为未确认
+(2) 将该码头下的泊位清空
+(3) 将已选择的replace into
+(4) 将已选择的泊位标记为未确认
+
+
+
+
+// 前序中序遍历的非递归写法，好写
+// 
+import java.util.*;
+
+public ArrayList<Integer> preOrder(TreeNode root){
+    // as
+    ArrayList<Integer> result = new ArrayList<Integer>();
+    Stack<TreeNode> nodeList = new Stack<Integer>();
+    // 遍历二叉树
+    // 因为存在后入先出的情况，所以使用栈
+    while(root!=null){
+        while(root != null){
+            result.add(root.val); // 将该节点加入，到时候弹出，取其右节点
+            nodeList.push(root); // 
+            root = root.left;
+        }
+        // 如果不为空，弹出节点，取其右节点
+        // 怎么将其返回呢
+        if(!nodeList.isEmpty())
+            ListNode lastLeft = nodeList.pop();
+            if(lastLeft.right!=null){
+                root = lastLeft.right; // 取其右节点
+            }
+            else{
+                root = nodeList.pop();
+            }
+            
+        }
+    }
+    return result;
+}
+// 后序遍历的非递归写法
+
+
+数据链路层
+网络层(IP ARP)
+传输层()
+应用层()
+
+
+## 对于预测的航次，除了计算量上做平均，在显示上就采用最大的那个概率
+## 航次
+> 先改航次

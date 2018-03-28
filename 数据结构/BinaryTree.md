@@ -149,7 +149,7 @@ public class TreeNode{
         if(root.left == null || root.right == null){
             return left + right + 1;
         }
-        return Math.min(maxDepth(root.left), maxDepath(root.right)) + 1; // 往上什一层
+        return Math.min(minDepth(root.left), minDepath(root.right)) + 1; // 往上什一层
     }
 
 ## 求二叉树的节点个数
@@ -546,4 +546,147 @@ public class TreeNode{
 
 ## 给定n，求1，2， 3， ..., n组成的二叉查找树的数目
 > 利用动态规划的思想进行
-c
+
+
+
+## 求二叉查找树的第k大的元素
+> 已知量：root, k
+> 未知量：第k大的元素
+> 假设该节点有多少个数，那么便可知第k大的在哪个位置
+> 
+   TreeNode KthNode(TreeNode root, int k){
+        // 异常情况
+        if(root == null || k < 1){
+            return null;
+        }
+        // 用以存储还需要遍历多少个点
+        int[] item = {k}; 
+        // 利用中序遍历
+        return inOrder(root, item);
+    }
+    // 中序遍历递归
+    // 返回第k大的结果，以null和非null区分
+    TreeNode inOrder(TreeNode root, int[] item){
+        TreeNode result = null;
+        // 递归左子树，是否有结果
+        if(result == null && root.left != null){
+            result = inOrder(root.left, item); 
+        }
+        // 访问该节点
+        // 每访问一个，将需要访问的节点-1
+        if(result == null){
+            // 还需要遍历1个节点
+            if(item[0] == 1){
+                result = root;
+            }
+            // 
+            else{
+                item[0]--;
+            }
+        }
+        // 递归右子树
+        if(result == null && root.right!=null){
+            result = inOrder(root.left, k);
+        }
+        return result;
+    }
+
+## 深度遍历递归形式
+### 前序遍历
+public ArrayList<Integer> preOrder(TreeNode root){
+    // init
+    ArrayList<Integer> result = new ArrayList<Integer>();
+    Stack<TreeNode> s = new Stack<>();
+    // as
+    if(root == null){
+        return result;
+    }
+    // 遍历
+    while(root!=null || !s.isEmpty()){
+        // 访问当前节点，遍历左子树，将左子树入栈
+        while(root!=null){
+            result.add(root.val);
+            s.push(root); // 入栈
+            root = root.left;
+        }
+        // 左子树遍历结束至null，开始弹栈，遍历其右子树
+        if(!s.isEmpty()){
+            TreeNode root = s.pop();
+            root = root.right; 
+        }
+    }
+    return result;
+}
+    
+### 中序遍历
+public ArrayList<Integer> inOrder(TreeNode root){
+    // init
+    ArrayList<Integer> result = new ArrayList<Integer>();
+    Stack<TreeNode> s= new Stack<>();
+    // as
+    if(root==null){
+        return result;
+    }
+    // root 为空，而且栈内元素已经全部弹出完毕
+    while(root!=null || !s.isEmpty()){
+        // 遍历左子树
+        while(root!=null){
+            s.push(root);
+            root = root.left;
+        }
+        // 访问当前节点和右子树
+        if(!s.isEmpty()){
+            root = s.pop(); // 弹栈，弹出一个即加入一个即可
+            result.add(root.val); // 访问当前节点
+            root = root.right; 
+        }
+    }
+}
+
+### 后序遍历
+> 后序遍历，遍历的结构为左子树，右子树，当前节点;
+> 比较的复杂的逻辑点在于，对于每个节点，出栈是为了访问右子树还是访问本身，这是需要添加逻辑判断
+> 构造一个新类，增加一个属性，是否第一次访问
+class BtNode{
+    TreeNode root;
+    boolean firstVisit = true;
+    public BtNode(root){
+        this.root = root;
+    }
+}
+
+// 后序遍历
+public ArrayList<Integer> postorderTraversal(TreeNode root) {
+    ArrayList<Integer> result = new ArrayList<Integer>();
+    Stack<BtNode> s = new Stack<>();
+    // as
+    if(root==null){
+        return result;
+    }
+    // traverse
+    // end codndition
+    while(root!=null || !s.isEmpty()){
+        // 遍历左子树
+        while(root!=null){
+            s.push(new BtNode(root));
+            root = root.left;
+        }
+        // 遍历右子树
+        if(!s.isEmpty()){
+            BtNode bRoot = s.pop();
+            root = bRoot.root;
+            if(bRoot.firstVisit){
+                bRoot.firstVisit = false; // 更新第一次访问
+                s.push(bRoot); // 放回，然后遍历右子树
+                root = root.right;
+            }
+            else{
+                result.add(root.val); // 访问当前节点
+                root = null; // 进入下一次弹栈
+            }
+        }
+    }
+    return result;
+}
+
+
