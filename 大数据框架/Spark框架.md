@@ -81,3 +81,61 @@
 
 ## Spark shuffle过程
 > 见Shuffle过程.md
+
+# Spark和Hadoop的区别
+## Hadoop解决了什么问题？
+> Hadoop解决了大数据(一台机器已经无法存储，一台机器已经无法在要求的时间内进行处理)的可靠存储和计算处理
+## hadoop的核心组件
+1. HDFS(分布式文件系统)，在PC组成的集群上提供高可靠的文件存储
+2. MapReduce(分布式计算模型)
+3. Yarn(资源管理器), 详见Yarn框架
+## hadoop的局限和不足
+1. 抽象层次低，需要手工编写代码
+2. 只提供Map和Reduce，表达能力欠缺
+3. 一个Job只有Map和Reduce两个阶段，复杂计算需要大量的job，job之间的依赖需要自己处理
+例如MR中的Join操作，就需要较为复杂的逻辑, 给每条记录设置一个表名字段，然后reduce过程，根据表名分成两个数组，对数组进行笛卡尔积运算
+## spark解决了什么问题
+> Spark是个分布式计算框架，提供了一系列方便的算子
+1. 封装程度高，提供了很多常用的算子
+2. 数据优先在内存中计算(内存装不下则存至磁盘)，提高计算速度
+3. DAG_Scheduler会解决RDD之间的依赖关系
+4. Spark容错性：
+    (1) linage:通过数据的血缘关系，重新执行一遍之前的操作
+    (2) CheckPoint: 数据持久化
+
+## spark和hadoop的区别和联系
+### 区别
+1. Spark是一个内存计算框架，数据优先在内存中存储
+2. Spark的性能高，可操作性强
+3. Spark的执行速度要比hadoop快上10-100倍
+### 联系
+1. Spark没有文件系统，大量数据处理时基于hadoop的HDFS文件系统
+2.  目前都可以使用Yarn作为资源调度
+
+## Spark内存解析
+> 任何Spark的进程都是一个JVM进程，JVM堆空间下Spark的内存分配情况
+### 内存模型
+![Spark内存模型](pic/内存模型)
+> 默认情况下，Spark进程的堆空间大小为512mb，同时为了避免OOM，仅允许使用90%的堆空间作为safe堆(Spark处理OOM的方式);
+> 20%的safe堆作为shuffle的内存使用，60%的safe堆作为数据缓存，剩余20%应该用于代码计算的内存
+> Storage中20%作为Unroll(展开的意思: 将序列化的数据进行展开)
+> Spark作为一个内存计算工具，会将数据存储在内存中，但实际上Spark并非完全的内存工具，只不过把内存当成LRU缓存的方式处理;
+> 实际上也可以理解，因为大数据量不可能在内存中全部存储，必然会有淘汰机制来进行
+
+#### Spark中能缓存多少数据？ 
+> 可以统计Executor的堆大小， 乘以safeFraction * memoryFraction, 默认是54%
+
+#### Spark Shuffle的内存
+> spark.shuffle.safetyFraction的默认值是0.8,  spark.shuffle.memoryFraction的默认值是0.2
+> 所以默认为16%的内存空间可以使用作为shuffle，怎么使用该内存呢？
+> 该部分内存使用ShuffleMemoryManager来管理.
+> 但是通常spark会使用这块内存用于shuffle中一些别的任务，当执行shuffle时，有时对数据进行排序，当进行排序时，需要缓冲排完序后的数据（注意不能改变LRU缓冲中的数据，因为后面可能要重用），这样就需要大量的RAM存储排完序后的数据块，当没有足够的内存用于排序，参考外排的实现，可以一块一块的排序，然后最终合并。
+
+#### Unroll内存
+> 该内存量的计算如下：
+spark.storage.memoryFraction * spark.storage.safetyFraction * spark.storage.unrollFraction
+
+> 当我们需要在内存展开数据块的时候使用，那么为什么需要展开呢？因为spark允许以序列化和非序列化两种方式存储数据，序列化后的数据无法直接使用，所以使用时必须要展开。该部分内存占用缓存的内存，所以如果需要内存用于展开数据时，如果这个时候内存不够，那么Spark LRU缓存中的数据会删除一些Eldest的数据块(类似于LRU缓存的机制)
+
+
+

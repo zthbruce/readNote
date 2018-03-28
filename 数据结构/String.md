@@ -120,3 +120,5 @@ public boolean equals(Object anObject) {
         return false;
     }
 
+## KMP算法
+> 这个算法是字符串匹配中非常经典的算法，将字符串的匹配从O(N*M)复杂度减少至O(N+M)

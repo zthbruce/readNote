@@ -187,3 +187,6 @@ Sort完成之后进行分组，分组调用默认的GroupingComparator组件
 > 即reduce方法接收到的是同一个key的一组value，这也是Hadoop 已经实现好的分组功能
 
 
+
+## hadoop yarn
+> hadoop 集群

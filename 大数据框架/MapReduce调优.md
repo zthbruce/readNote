@@ -8,8 +8,9 @@
 > 磁盘IO和网络IO和Shuffle过程的联系很大
 
 
-##常见资源瓶颈
+## 常见资源瓶颈
 > 怎么调优：关键找到程序运行的瓶颈在哪
+> 然后才能对症下药
 ### CPU
 > CPU是Map-Reduce的计算环节的关键资源(如DBSCAN聚类，每个分区都进行DBSCAN聚类)
 > 计算密集型代码是高CPU占用的原因，
@@ -59,13 +60,13 @@
  Map阶段的中间文件写入量
  Reduce阶段的中间文件写入量
 
- ### CPU配置不当引起的并行处理低效
- > 分配的Core数比实际core数要小，会导致core资源的闲置
+### CPU配置不当引起的并行处理低效
+> 分配的Core数比实际core数要小，会导致core资源的闲置
 
 
 ### 数据倾斜导致的长尾Reducer
 > 由于key值分布不均匀，导致部分reduce任务时间很多，部分reduce任务时间很长
-> 数据倾斜问题是个很严重的问题
+> 数据倾斜问题是个很严重的问题，一般通过Spark_UI定位
 
 ### 内存不足
 > 内存不足可能导致任务被挂起，陷入停止响应的状态
@@ -104,9 +105,18 @@ java.lang.OutOfMemoryError: Java heap space
 > Executor内部是个线程池，每个task都会被封装成TaskRunner交由线程池处理
 > 每个Executor的并发度由Executor的core数目决定
 
+> 注意点：
+> 该参数的值最好是worker的整数倍，便于分配Executor
+
 2. executor-memory
 > 每个executor分配的内存
 > 这个需要小心的计算，该内存量和executor-cores决定了每个core能分到多少内存
+
+> 注意点：
+> Executor的内存主要分三块：
+(1) task执行代码的内存，包括读入数据占得内存，默认占20%
+(2) shuffle过程的read阶段，拉取上一个stage的task输出，然后进行聚合操作，默认占20%
+(3) RDD持久化的使用，占总内存60%
 
 3. executor-cores
 > Executor进程的CPU core数量
@@ -118,5 +128,15 @@ java.lang.OutOfMemoryError: Java heap space
 
 5. spark.default.parallelism
 > 设置每个stage的默认task数；
-> 不设置会导致Spark根据底层HDFS的block数量来设置task的数量，默认一个HDFS block对应一个task
+> 不设置会导致Spark根据底层HDFS的block数量来设置task的数量，默认一个HDFS block对应一个tasks
+
+## 数据倾斜问题
+> 背景(解决数据倾斜问题)
+> 因为stage的结束时间取决于stage中最后一个task的执行，所以任务的执行速度取决于最大的那个任务
+> 数据倾斜问题是非常重要的问题，倾斜严重时会导致执行效率很低
+
+### 如何定位该瓶颈
+> 绝大多数task执行得都非常快，但个别task执行极慢。如：1000个任务，998个都在1分钟内执行完了，剩余2个task却要两个小时
+> 原本能够正常执行的Spark作业, 突然发生了OOM错误(堆空间溢出)
+### 调优
 
