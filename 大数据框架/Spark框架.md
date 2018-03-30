@@ -1,9 +1,10 @@
 # Spark框架
-> spark是当前最流行的分布式计算框架
+> spark是当前最流行的基于内存的分布式计算框架
 ## 概览
 > Spark集群上分为master节点和worker节点, 类似于hadoop的master和slave
+> Spark的架构分为：master：中心调控,worker(其实指的是Executor/Container)：运行程序, driver：驱动程序SparkContext
   Master节点上常驻Master守护进程，负责管理全部Worker节点
-  Worker节点上常驻Worker守护进程，负责master通信并管理
+  Worker节点上常驻Worker守护进程，负责master通信并管理(worker上运行的Executor为本质)
   Driver是驱动程序，能够创造SparkContext
 
 > 每个Worker存在一个或多个ExecutorBackEnd进程，每一个进程都包含一个Exexutor对象，该对象拥有线程池，每个线程可以执行一个task
@@ -139,4 +140,13 @@ spark.storage.memoryFraction * spark.storage.safetyFraction * spark.storage.unro
 
 
 
+## Spark 广播变量
+### 为什么使用广播变量
+> 为什么会出现广播变量，因为在实际操作中，很可能存在算子函数，需要传入外部变量，默认情况下，Spark会将该变量复制n份，通过网络传输到各个task中去，那么如果一个较大的变量(100M)分发到每个task时，通常task数目巨大，会带来巨大的网络I/O开销，而且每个Executor(对应一个jvm进程)会由于内存消耗过大导致GC频繁，导致性能下降。
+> 使用广播变量，对于大变量来说，每个Executor中会缓存一份副本，内部的task会共享该副本,这样做的好处，减少网络IO, 降低Executor内存占用，降低GC的频率
+
+> 这其中有个优化的点：Join操作时如果两边一边是大表一边是小表的话，则可以用广播变量代替小表，每次只需要map，而不需要Shuffle(shuffle的I/O,网络I/O开销都很大)
+
+### 广播变量怎么实现？
+> 将变量从Driver发送到Executor(或者Executor到Executor)，而且至多发送一次
 

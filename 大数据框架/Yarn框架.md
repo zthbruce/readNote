@@ -48,15 +48,39 @@
 (2) 运行各类任务的Container，由ApplicationMaster向NodeManager申请的，由Application根Container通信以启动之
 
 ## Yarn和Spark的搭配
-### 主要问题：Yarn是怎么应用到Spark程序的调控上，具体问题上：yarn的container和Executor的关系是什么？
-> yarn的container和Executor实际上一个抽象单位，实际上都是一个JVM进程
-> 当在yarn上运行Spark时，每个Executor就是一个yarn container在运行
-### yarn-client和yarn-cluster
-> yarn-client模式时，driver就在提交代码的节点上
-> yarn-cluster模式时，其运行方式如下：
+1. Yarn的Node对应Spark的worker，并且每个Node都会有一个NodeManager
+2. Yarn的Application master对应Spark的master，负责资源的申请和
+3. Yarn的container对应Spark的Executor(实际上都是对应一个jvn进程)
+## yarn-client和yarn-cluster
+> 这是yarn上两种运行模式，这两种模式的最大的区别是体现在Application master。
+> 所以首先说一说Application master
+
+### application master
+> 在yarn中，每一个application都会有一个application master进程(Spark Standalone也存在一个master，这是对应的)
+> 它是Application申请的第一个container，用于运行Application master(以下简称为AM)
+> 负责与ResourceManager打交道，请求资源并在获取资源之后告诉NodeManager启动对应的Container
+> yarn cluster中，driver运行在AM上面，之后由AM负责申请资源，划分task, 分发task, 并与Container进行通信，提交成功之后，client可以直接关闭。
+
+### yarn-cluster模式如下
 ![cluster模式](pic/yarn-cluster.png)
-1. yarn client向resourceManager申请ApplicationMaster
-2. yarn client 向resourceManager申请container，运行task
+> 最关键的地方在于Dirver在AM中运行，所以提交完任务，client就可以随时关闭了。
+> 其步骤如下：
+1. client向ResourceManager(以下简称RM)提交请求，并上传jar到HDFS上,这期间包括四步：
+    a) 连接到RM
+    b) 从RM ASM(ApplicationsManager)中获得metric, resource等信息
+    c) upload app jar and spark-assembly jar 到HDFS
+    d) 设置运行环境和container上下文
+2. RM向NM申请资源，创建Spark的AM
+3. NM启动AM，然后向ResourceManager AsM注册
+4. AM向RM申请资源，然后RM通知NodeManager是分配container, 然后RM会收到container返回的信息, RM再把container信息返回给application
+5. AM从HDFS中获取jar包，初始化SparkContext(即为驱动Driver), 并启动DAG schduler 和 YARN Cluster Scheduler(在standalone中称为taskScheduler)，切分称为taskSet,并发给container运行
+6. AM 直接和container（executor）进行交互，完成这个分布式任务
+
+### yarn-client的模式如下
+![client模式](pic/yarn-client.png)
+> 关键的地方在于Driver不在AM, AM只负责神申请资源，
+> driver(位于client上面)负责和Container的交互，以及最终结果的汇总
+> 将终端kill掉，相当于kill整个程序
 
 
 

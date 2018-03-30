@@ -84,7 +84,7 @@ java.lang.OutOfMemoryError: Java heap space
 3. Map Shuffle输出量大导致网络磁盘巨大I/O
 > 压缩Map输出
 > 引入combiner(本地的reducer)，提前合并一下， 减少数据量
-
+(提前合并的方式进行)
 4. Reduce输出量大造成的网络磁盘巨大I/O
 > 压缩任务输出
 > 调整HDFS的冗余复制数(HDFS为了保证容错性，提供了冗余备份机制(DataNode一般会赋值三份保存))
