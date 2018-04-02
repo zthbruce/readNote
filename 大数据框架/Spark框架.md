@@ -150,3 +150,227 @@ spark.storage.memoryFraction * spark.storage.safetyFraction * spark.storage.unro
 ### 广播变量怎么实现？
 > 将变量从Driver发送到Executor(或者Executor到Executor)，而且至多发送一次
 
+## 分区器
+> 分区器是用来计算该数据<k, v>将会被分到哪个分区，每个分区对应一个task。其功能有二：
+1. 由于partitionNum决定了Shuffle 过程之后的ShuffleRDD的个数，即决定了reducer的个数
+2. 确定每条数据会被分到哪个分区
+
+> Spark内置存在两种分区器: HashPartitioner 和 RangePartitioner。当然用户也可以编写自己的Partitioner，只要实现
+> 继承该抽象类，然后实现getPartitions方法
+abstract class Partitioner extends Serializable {
+  def numPartitions: Int
+  def getPartition(key: Any): Int
+}
+### 哈希分区器
+> 取键值的hashCode, 除以子RDD的个数取余即可
+> 哈希分区器
+class HashPartitioner(partitions: Int) extends Partitioner {
+  def numPartitions: Int = partitions
+
+  def getPartition(key: Any): Int = key match {
+    case null => 0
+    case _ => Utils.nonNegativeMod(key.hashCode, numPartitions)
+  }
+
+  override def equals(other: Any): Boolean = other match {
+    case h: HashPartitioner =>
+      h.numPartitions == numPartitions
+    case _ =>
+      false
+  }
+
+  override def hashCode: Int = numPartitions
+}
+
+> 优点： 计算速度快
+
+> 缺点： 不关心键值的分布情况，导致数据倾斜的概率较大
+
+### Range Partitioner(范围分区器)
+> 乍一想范围分区的思想和Hash分区的思想，就是两种思想：一种是序列映射(满足同余关系)，一种是范围分区(满足一定大小关系，如桶排序就是一种范围分区)
+> 使用范围分区器，有以下好处：
+1. 范围分区器将争取将所有分区都获得较均匀的数据，减少数据倾斜问题。
+2. 分区内数据的上界都是有序的(Spark的orderByKey就是采用这种方式进行)
+
+> Spark的范围分区器需要完成两个功能：
+1. 根据父 RDD 的数据特征，确定子 RDD 分区的边界
+2. 形成一个键值对，使得查找的时候进行
+
+> 要完成对应的功能，就得解决很多问题：
+首先， 怎么确定子RDD分区的边界？
+> 数据量这么大，我们不可能遍历一遍总数据集，统计学家很厉害，发明了抽样的概念，然后建立了一套在抽样上的理论；
+> 所以，经验可知，我们需要进行数据采样，来确定边界点的划分(实际上，采样观察数据也是解决数据倾斜的一种手段)；
+
+#### Spark1.1之前
+#### 样本量
+那么首先应该考虑的就是采多少合适？Spark是怎么解决的？
+
+> 样本量太小则不具有代表性，样本量太大则会导致，采样，排序的时间过长。
+
+> Spark的采样量由子RDD的分区数决定，平均每个分区20个点
+    val maxSampleSize = partitionNum * 20
+
+#### 单分区采样个数
+> 上面确定了总采样个数，那么具体数据得从父Stage的RDD中采样啊，那么就涉及到每个父分区怎么采样？
+
+> 当然最简单的思路就是每个分区平均分配，但这显然是不合适的，因为父RDD中未必是分布均匀的，既然分布不均匀，那么数据量大的分区自然应该抽取更多的数据，否则很容易偏了，而且数据量少的分区甚至都达不到平均数。
+
+> 采样个数为每个分区内数据量乘以一个比例Frac，那么就会解决对应的问题
+  val rddSize = rdd.count() // 计数
+  val frac = math.min(maxSampleSize / math.max(rddSize, 1), 1.0)
+
+> frac就是采样样本量 / 父RDD的总数据量，由此可见，必须遍历一遍父RDD, 然后统计数目
+
+#### 采样算法
+> 采样比例确定了之后，利用Spark的采样函数取了数据之后，再进行排序即可
+
+> 采样会对RDD数据各进行一次遍历(开销很大啊)
+
+#### 确定边界
+> 边界确定也非常简单，就是将排序后的采样点，按照长度(sampleSize / (partitionNum - 1))确定对应的位置，然后将对应的位置取出作为(partitionNum - 1)个边界点
+val bounds = new Array[K](partitions - 1)
+for (i <- 0 until partitions - 1) {
+  val index = (rddSample.length - 1) * (i + 1) / partitions
+  bounds(i) = rddSample(index)
+}
+
+
+### 1.4之后
+> 实际上，上面的的分区方法，实际上开销很大，而且效率不高:
+> 需要遍历一遍父RDD进行count， 再次采样又会遍历一遍父RDD，如果使用SortByKey算子，那么还需要进行归并(再遍历一遍数据集);
+> 遍历的次数太多了，我们需要进行优化。
+
+> 优化的思路，主要是减少遍历的次数：
+> 前面说，数据未必是分布均匀的，所以得根据数据量大小来计算，但是，数据也未必就不是均匀的啊，如果数据比较均匀，完全可以每个分区的采样比例相同啊，这样的话，就完全没必要遍历父RDD统计其个数了。
+
+> 假设数据在每个分区均匀分区，每个分区取相同的数目，同时统计每个分区的实际数据量，判断是否出现数据偏移，再对个别分区进行重新分配
+
+#### 样本总量
+> 依然是每个子分区20个数据点，但是存在上界1000000个点
+  val maxSampleSize = partitionNum * 20 
+#### 单分区采样数 
+> 理论上，每个分区的采样数是 sampleSize / rdd.partitions.size；
+> 但是实际操作时却取了理论值的三倍
+val sampleSizePerPartition = math.ceil(3.0 * sampleSize / rdd.partitions.size).toInt
+
+> 数据值在3倍平均值以上的需要重新分配，否则则不再调整；
+
+> 为什么要这么做呢？
+> 我猜测是为了解决数据偏移的问题，如果数据量大于平均值的三倍，那么就会进行重新分配(如果直接取平均值，不行么？只要判断是不是当前的三倍即可啊，这一步为什么呢，好像有点多次一举，难道是为了减少计算量，这里算一次即可？)
+
+解答：这也是为了减缓数据分布的偏移，因为数据量少的分区，可能达不到3倍平均，所以加大上限(3倍平均采样size)，所以可以给数据量大的更多的样本量
+
+#### 采样算法
+> 在确定单个分区的采样个数之后，即可进行采样，但是发现我们并不知道每个分区的数据量，所以我们也无法知道采样比例。
+> 如果先进行遍历获得数目，那么和老版本就一模一样了，这里我们就需要引入新的思想(水塘抽样，牛人真多啊)
+
+1. 水塘抽样
+> 水塘抽样是一种在线抽样法，能在不知道样本总数或者数据无法载入内存的情况下进行等概率抽样
+val (numItems, sketched) = RangePartitioner.sketch(rdd.map(_._1), sampleSizePerPartition)
+
+> numItems表示RDD的数据总数，sketched 是一个迭代器，每个元素是一个三元组 (idx, n, sample)，其中 idx 是分区编号，n 是分区的数据个数（而不是采样个数），sample 是一个数组，存储该分区采样得到的样本数据。
+水塘抽样会被问！！！
+
+2. 抽样调整
+> 到这里，抽样还没有完成，还有抽样调整，将按比例应该抽取数据量(即按照原先比例的抽法)大于3倍平均值的进行重新抽样，表明此时发生了数据偏移，这表明需要更多的抽样数据，应该进行重新取样
+那么抽样率应该怎么算呢？ 和之前的算法一样 sampleSize / numItems, 采样数/总点数,
+然后采用sample进行抽样。
+
+> 采样后的每一个样本以及该样本采样时候的采样间隔（1 / 采样率，记为 weight）都会放到 candidates 数组中。采样过程到此结束。
+(采样间隔用于计算后面的分隔点)
+
+> 权重越大，采样率越小，说明样本量越大，那么其样本包含的点就应该比较多才对，
+
+> 祭上代码如下：
+>
+val fraction = math.min(sampleSize / math.max(numItems, 1L), 1.0)
+val candidates = ArrayBuffer.empty[(K, Float)]
+val imbalancedPartitions = mutable.Set.empty[Int]
+
+sketched.foreach { case (idx, n, sample) =>
+  /* I: 应该采样的数据比实际采样的数据要大 */
+  if (fraction * n > sampleSizePerPartition) {
+    imbalancedPartitions += idx
+  } else {
+    // The weight is 1 over the sampling probability.
+    val weight = (n.toDouble / sample.size).toFloat
+    for (key <- sample) {
+      candidates += ((key, weight))
+    }
+  }
+}
+if (imbalancedPartitions.nonEmpty) {
+  // Re-sample imbalanced partitions with the desired sampling probability.
+  val imbalanced = new PartitionPruningRDD(rdd.map(_._1), imbalancedPartitions.contains)
+  val seed = byteswap32(-rdd.id - 1)
+    val reSampled = imbalanced.sample(withReplacement = false, fraction, seed).collect()
+  val weight = (1.0 / fraction).toFloat
+  candidates ++= reSampled.map(x => (x, weight))
+}
+
+#### 边界确定
+> 因为每个分区的采样率不同，所以其实每个分区采样的间隔也不应该相同(厉害，这是为了保证每个分区内的数据能够更加均匀)；
+>
+    def determineBounds[K : Ordering : ClassTag](
+        candidates: ArrayBuffer[(K, Float)],
+        partitions: Int): Array[K] = {
+      val ordering = implicitly[Ordering[K]]
+      val ordered = candidates.sortBy(_._1)
+      val numCandidates = ordered.size
+      val sumWeights = ordered.map(_._2.toDouble).sum
+      val step = sumWeights / partitions
+      var cumWeight = 0.0
+      var target = step
+      val bounds = ArrayBuffer.empty[K]
+      var i = 0
+      var j = 0
+      var previousBound = Option.empty[K]
+      while ((i < numCandidates) && (j < partitions - 1)) {
+        val (key, weight) = ordered(i)
+        cumWeight += weight
+        if (cumWeight > target) {
+          // Skip duplicate values.
+          if (previousBound.isEmpty || ordering.gt(key, previousBound.get)) {
+            bounds += key
+            target += step
+            j += 1
+            previousBound = Some(key)
+          }
+        }
+        i += 1
+      }
+      bounds.toArray
+    }
+
+
+#### 快速定位
+> 无论是新版本还是老版本的范围分区器，使用的定位方法都是一样的。范围分区器的定位实现在 getPartition 方法内，若边界的数量小于 128，则直接遍历，否则使用二叉查找法来查找合适的分区编号。
+
+> 祭上代码如下：
+  def getPartition(key: Any): Int = {
+    val k = key.asInstanceOf[K]
+    var partition = 0
+    if (rangeBounds.length <= 128) {
+      // If we have less than 128 partitions naive search
+      while (partition < rangeBounds.length && ordering.gt(k, rangeBounds(partition))) {
+        partition += 1
+      }
+    } else {
+      // Determine which binary search method to use only once.
+      partition = binarySearch(rangeBounds, k)
+      // binarySearch either returns the match location or -[insertion point]-1
+      if (partition < 0) {
+        partition = -partition-1
+      }
+      if (partition > rangeBounds.length) {
+        partition = rangeBounds.length
+      }
+    }
+    if (ascending) {
+      partition
+    } else {
+      rangeBounds.length - partition
+    }
+  }
+
+> 有序数组，利用二分数组找出，找出比目标大的那个点的位置即可(目标大，取left)

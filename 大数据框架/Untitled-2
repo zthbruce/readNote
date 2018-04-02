@@ -54,14 +54,60 @@ public ArrayList<Integer> preOrder(TreeNode root){
     return result;
 }
 // 后序遍历的非递归写法
+// 关键在于定义顺序，只有第二次弹出该节点，才访问该节点
 
 
-数据链路层
-网络层(IP ARP)
-传输层()
-应用层()
+// 大根堆的写法
+// 堆化
+public void maxHeapify(int[] arr, int start, int end){
+    // as 
+    if(arr == null || start >= end){
+        return;
+    }
+    // 取三者中间的最大
+    int li =  1 + (start << 1); // 左子树
+    int right = 1 + li;
+    int cmax = li;
+    if(right <= end && arr[cmax] < arr[right]){
+        cmax = right;
+    }
+    // 将cmax与start作交换
+    if(cmax > start){
+        swap(arr, i, j);
+        maxHeapify(arr, cmax, end); // 将子节点堆化
+    }
+}
 
 
-## 对于预测的航次，除了计算量上做平均，在显示上就采用最大的那个概率
-## 航次
-> 先改航次
+public void swap(int[] arr, int i ,int j){
+        int tmp = arr[i];
+        arr[i] = arr[j];
+        arr[j] = tmp;
+}
+
+
+// 堆排序
+public void heapSort(int[] arr){
+    // as 
+    if(arr == null || arr.length <= 1){
+        return;
+    }
+    // 初始化
+    int len = arr.length - 1;
+    // 构造最大堆
+    // 遍历每个父节点进行判断
+    int lastIndex = (len - 1) / 2;
+    // 从下到上，依次构造最大堆
+    for(int i = lastIndex; i >= 0; i--){
+        maxHeapify(arr, i, len);
+    }
+
+    // 排序主体
+    // 将当前的最小点和最后一个节点进行交换
+    while()
+    // 需要交换n次
+    for(int i = 0; i < len; i++){
+        swap(0, len - i);
+        maxHeapify(arr, 0, len - i -1); // 从哪到哪
+    }
+}

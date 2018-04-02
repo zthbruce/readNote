@@ -1,5 +1,6 @@
-1. Spark，Hadoop,Hbase 框架是怎么样的
-2. 数据结构
-3. 基础算法
-4. java方面
-5. 计算机网络知识
+
+
+binarySort:
+如何找到要插入的位置
+
+只要小于等于，就将start往后移，就更新start = mid + 1, 这样最终取start即可
