@@ -1,6 +1,6 @@
 # Hadoop Yarn
 ## 背景(解决了什么问题：资源管理) 
-> 在yarn出现之前，资源管理和任务管理耦合在一起(都在master上面)，集群的可扩展性，可靠性(单点故障)很差，而且资源的利用率很大
+> 在yarn出现之前，资源管理和任务管理耦合在一起(都在master上面)，集群的可扩展性，可靠性(单点故障)很差，而且资源的利用率很低
 > Yarn的结构中，把原来JobTracker管的两部分功能(资源管理，任务调度)拆开了，资源调度由ResourceManager，任务调度让Application Master负责，让各个模块各司其职
 
 ## 架构
@@ -48,6 +48,7 @@
 (2) 运行各类任务的Container，由ApplicationMaster向NodeManager申请的，由Application根Container通信以启动之
 
 ## Yarn和Spark的搭配
+<<<<<<< HEAD
 1. Yarn的Node对应Spark的worker，并且每个Node都会有一个NodeManager
 2. Yarn的Application master对应Spark的master，负责资源的申请和
 3. Yarn的container对应Spark的Executor(实际上都是对应一个jvn进程)
@@ -81,7 +82,6 @@
 > 关键的地方在于Driver不在AM, AM只负责神申请资源，
 > driver(位于client上面)负责和Container的交互，以及最终结果的汇总
 > 将终端kill掉，相当于kill整个程序
-
 
 
 

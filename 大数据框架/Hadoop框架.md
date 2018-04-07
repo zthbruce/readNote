@@ -189,4 +189,4 @@ Sort完成之后进行分组，分组调用默认的GroupingComparator组件
 
 
 ## hadoop yarn
-> hadoop 集群
+> hadoop 集群的资源管理器
