@@ -1,6 +1,6 @@
 # Hadoop Yarn
 ## 背景(解决了什么问题：资源管理) 
-> 在yarn出现之前，资源管理和任务管理耦合在一起(都在master上面)，集群的可扩展性，可靠性(单点故障)很差，而且资源的利用率很大
+> 在yarn出现之前，资源管理和任务管理耦合在一起(都在master上面)，集群的可扩展性，可靠性(单点故障)很差，而且资源的利用率很低
 > Yarn的结构中，把原来JobTracker管的两部分功能(资源管理，任务调度)拆开了，资源调度由ResourceManager，任务调度让Application Master负责，让各个模块各司其职
 
 ## 架构
@@ -48,6 +48,7 @@
 (2) 运行各类任务的Container，由ApplicationMaster向NodeManager申请的，由Application根Container通信以启动之
 
 ## Yarn和Spark的搭配
+> 实际上Yarn的resourceManager会申请ApplicationMaster
 ### 主要问题：Yarn是怎么应用到Spark程序的调控上，具体问题上：yarn的container和Executor的关系是什么？
 > yarn的container和Executor实际上一个抽象单位，实际上都是一个JVM进程
 > 当在yarn上运行Spark时，每个Executor就是一个yarn container在运行
@@ -56,7 +57,8 @@
 > yarn-cluster模式时，其运行方式如下：
 ![cluster模式](pic/yarn-cluster.png)
 1. yarn client向resourceManager申请ApplicationMaster
-2. yarn client 向resourceManager申请container，运行task
+
+> 两者最大的区别就是Application master的位置和其作用
 
 
 
