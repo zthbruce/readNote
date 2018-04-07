@@ -433,9 +433,44 @@ public class Solution {
 /100 %100
 
 > 快排
-> 快排在于入坑分治
-public void qSort(int[] arr){
+> 快排关键在于两单：1. 挖坑填坑 2. 分治
 
+
+public void qSort(int[] arr){
+    // abnormal situation
+    if(arr == null || arr.length <=1){
+        return;
+    }
+    qSort(arr, 0, arr.length-1);
+}
+
+public void qSort(int[] arr, int start, int end){
+    // 返回条件
+    if(start >= end){
+        return;
+    }
+    // init
+    int pivot = arr[start];
+    int i = start;
+    int j = end;
+    while(i < j){
+        // 从右开始
+        while(i<j && arr[j] > pivot){
+            j--;
+        }
+        if(i < j){
+            arr[i++] = arr[j]; // 进行更新
+        }
+        while(i < j && arr[i] < pivot){
+            i++;
+        }
+        if( i < j){
+            arr[j--] = arr[i]; // 进行更新
+        }
+    }
+    arr[i] = pivot;
+    qSort(arr, 0, i-1);
+    qSort(arr, i+1, end);
 }
 
 

@@ -657,12 +657,14 @@ class BtNode{
 
 // 后序遍历
 public ArrayList<Integer> postorderTraversal(TreeNode root) {
-    ArrayList<Integer> result = new ArrayList<Integer>();
-    Stack<BtNode> s = new Stack<>();
     // as
     if(root==null){
         return result;
     }
+    // init
+    ArrayList<Integer> result = new ArrayList<Integer>();
+    Stack<BtNode> s = new Stack<>();
+    
     // traverse
     // end codndition
     while(root!=null || !s.isEmpty()){
@@ -673,6 +675,7 @@ public ArrayList<Integer> postorderTraversal(TreeNode root) {
         }
         // 遍历右子树
         if(!s.isEmpty()){
+            // 弹栈的时候
             BtNode bRoot = s.pop();
             root = bRoot.root;
             if(bRoot.firstVisit){
