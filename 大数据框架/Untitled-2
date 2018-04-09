@@ -111,3 +111,15 @@ public void heapSort(int[] arr){
         maxHeapify(arr, 0, len - i -1); // 从哪到哪
     }
 }
+
+
+## 复习
+> 数据库常用面试题(已看)
+
+> jvm内存模型和GC模型(已看)
+
+> Spark和Hadoop
+
+> 计算机网络()
+
+> 常用大规模算法(已看)

@@ -1,5 +1,6 @@
 # Hadoop框架
-> hadoop的核心组件hdfs和map-reduce计算模型
+> hadoop的核心组件hdfs和map-reduce计算模型(后来再加上Yarn的RM作为系统调控)
+
 ## HDFS(Hadoop Distributed File System 分布式文件系统)
 > 分布式的提供冗余备份的文件系统，可存储海量数据
 > 为什么要设计HDFS呢？
@@ -21,11 +22,12 @@ hdfs主要由3个组件构成，分别为NameNode, SecondaryNameNode, DataNode, 
 ### DataNode(数据节点)
 > 和普通的文件系统类似，hdfs也会把文件分块来存储。普通文件系统采用的磁盘块数据大小一般为512B，hdfs通常的数据块是128M。为什么数据块这么大呢，因为数据块较大可以增大数据的吞吐量，减少寻址的累计时间，假设寻址时间为10ms，磁盘传输速率为100M/s，那么获取相同大小的数据，必然是数据块越大可以减少寻址的次数。但是数据块太大也不好，块过大会导致任务数量过少，不利于并发度，降低作业的处理速度
 
->hdfs按块存储还有如下好处：
+> hdfs按块存储还有如下好处：
 1. 文件可以任意大，也不用担心单个结点磁盘容量小于文件的情况
 2. 简化了文件子系统的设计，子系统只存储文件块数据，而文件元数据则交由其它系统（NameNode）管理
 3. 有利于备份和提高系统可用性，因为可以以块为单位进行备份，hdfs默认备份数量为3(备份)
 4. 有利于负载均衡
+
 ### NameNode
 > 为什么需要NameNode呢？因为当客户端请求一个文件或者存储一个文件时，我们必须知道要往哪个DataNode上取数据, 获取这些信息后，客户端再与这个DataNode交互，NameNode就是该信息的维护者
 
@@ -53,15 +55,15 @@ edits文件存在的目的是为了提高系统的操作效率，NameNode在更�
 
 > 合并步骤
 1. 合并之前告知NameNode把所有的操作写到新的edites文件并将其命名为edits.new。
-2. SecondaryNameNode从NameNode请求fsimage和edits文件
-3. SecondaryNameNode把fsimage和edits文件合并成新的fsimage文件
-4. NameNode从SecondaryNameNode获取合并好的新的fsimage并将旧的替换掉，并把edits用第一步创建的edits.new文件替换掉
+2. SecondaryNameNode从NameNode请求fsimage和edits文件。
+3. SecondaryNameNode把fsimage和edits文件合并成新的fsimage文件。
+4. NameNode从SecondaryNameNode获取合并好的新的fsimage并将旧的替换掉，并把edits用第一步创建的edits.new文件替换掉。
 5. 更新fstime文件中的检查点
 
 ### 数据备份
 > hadoop通过数据备份的方式实现容错，有备而无患
 
-> DataNode会通过心跳的方式定期的向NameNode发送自己节点上的Block 报告，这个报告中包含了DataNode节点上的所有数据块的列表
+> DataNode会通过心跳的方式定期的向NameNode发送自己节点上的Block报告，这个报告中包含了DataNode节点上的所有数据块的列表
 
 > 在Hadoop中，如果副本数量是3的情况下，Hadoop默认是这么存放的，把第一个副本放到机架的一个节点上，另一个副本放到同一个机架的另一个节点上，把最后一个节点放到不同的机架上。这种策略减少了跨机架副本的个数提高了写的性能，也能够允许一个机架失败的情况，算是一个很好的权衡。
 
@@ -79,7 +81,7 @@ edits文件存在的目的是为了提高系统的操作效率，NameNode在更�
 > 可以允许DataNode失败，DataNode会定期(默认3秒)向NameNode发送心跳，若NameNode在指定间隔中没有收到心跳，就认为此节点已经失败。此时，NameNode把失败节点的数据(从另外的副本节点获取)复制到另外一个健康的节点，保持了集群的副本数。
 
 ### hdfs文件读过程
->hdfs通过rpc调用NameNode获取文件块的位置信息，对于文件的每一个块，NameNode会返回含有该块副本的DataNode的节点地址，另外，客户端还会根据网络拓扑来确定它与每一个DataNode的位置信息，从离它最近的那个DataNode获取数据块的副本，最理想的情况是数据块就存储在客户端所在的节点上。
+> hdfs通过rpc调用NameNode获取文件块的位置信息，对于文件的每一个块，NameNode会返回含有该块副本的DataNode的节点地址，另外，客户端还会根据网络拓扑来确定它与每一个DataNode的位置信息，从离它最近的那个DataNode获取数据块的副本，最理想的情况是数据块就存储在客户端所在的节点上。
 
 > hdfs发起请求的过程如下：
 1. 客户端发起读请求
@@ -88,8 +90,7 @@ edits文件存在的目的是为了提高系统的操作效率，NameNode在更�
 4. 读取完成关闭连接
 
 ### hdfs文件写过程
-> 
-DistributedFileSystem会发送给NameNode一个RPC调用，在文件系统的命名空间创建一个新文件，在创建文件前NameNode会做一些检查，如文件是否存在，客户端是否有创建权限等，若检查通过，NameNode会为创建文件写一条记录到本地磁盘的EditLog，若不通过会向客户端抛出IOException。创建成功之后DistributedFileSystem会返回一个FSDataOutputStream对象，客户端由此开始写入数据。
+> DistributedFileSystem会发送给NameNode一个RPC调用，在文件系统的命名空间创建一个新文件，在创建文件前NameNode会做一些检查，如文件是否存在，客户端是否有创建权限等，若检查通过，NameNode会为创建文件写一条记录到本地磁盘的EditLog，若不通过会向客户端抛出IOException。创建成功之后DistributedFileSystem会返回一个FSDataOutputStream对象，客户端由此开始写入数据。
 
 > 过程如下：
 1. 客户端在向NameNode请求之前先写入文件数据到本地文件系统的一个临时文件

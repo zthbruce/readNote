@@ -48,10 +48,9 @@
 (2) 运行各类任务的Container，由ApplicationMaster向NodeManager申请的，由Application根Container通信以启动之
 
 ## Yarn和Spark的搭配
-<<<<<<< HEAD
 1. Yarn的Node对应Spark的worker，并且每个Node都会有一个NodeManager
 2. Yarn的Application master对应Spark的master，负责资源的申请和
-3. Yarn的container对应Spark的Executor(实际上都是对应一个jvn进程)
+3. Yarn的container对应Spark的Executor(实际上都是对应一个jvm进程)
 ## yarn-client和yarn-cluster
 > 这是yarn上两种运行模式，这两种模式的最大的区别是体现在Application master。
 > 所以首先说一说Application master
@@ -83,6 +82,7 @@
 > driver(位于client上面)负责和Container的交互，以及最终结果的汇总
 > 将终端kill掉，相当于kill整个程序
 
+## 
 
 
 

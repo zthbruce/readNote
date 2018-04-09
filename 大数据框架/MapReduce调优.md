@@ -85,6 +85,7 @@ java.lang.OutOfMemoryError: Java heap space
 > 压缩Map输出
 > 引入combiner(本地的reducer)，提前合并一下， 减少数据量
 (提前合并的方式进行)
+
 4. Reduce输出量大造成的网络磁盘巨大I/O
 > 压缩任务输出
 > 调整HDFS的冗余复制数(HDFS为了保证容错性，提供了冗余备份机制(DataNode一般会赋值三份保存))
@@ -176,6 +177,7 @@ java.lang.OutOfMemoryError: Java heap space
     (2) 局部聚合完成后，将前缀去掉，这时数据量就大大减少了(取决于随机的范围)，然后在进行全局聚合，得到最终结果
 > 方案优点：对于聚合的shuffle情况，效果非常好，可以解决数据倾斜问题
 > 方案缺点：仅仅适用于聚合类的shuffle操作，对join和求平均值的一些shuffle操作就不能使用(类似于combiner)
+
 
 4. 将reduce join 转化为map join
 > 适用场景：做Join操作时，如果join两边的数据量差异很大

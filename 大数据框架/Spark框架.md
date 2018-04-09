@@ -71,7 +71,9 @@
 
 ### stage和task提交
 1. 确定stage的missingParentStages，使用getMissingParentStages(stage),如果parentStages都执行过了，getMissingParentStages的执行结果为空
+
 2. 如果missingParentStage不为空，那么先递归提交missing的parent Stages, 将自己加入waitingStages里面，等到parent stage都执行完了，才会触发waitingStages里面的stage
+
 3. 如果 missingParentStages 为空，说明该 stage 可以立即执行，那么就调用submitMissingTasks(stage, jobId)来生成和提交具体的 task。如果 stage 是 ShuffleMapStage，那么 new 出来与该 stage 最后一个 RDD 的 partition 数相同的 ShuffleMapTasks。如果 stage 是 ResultStage，那么 new 出来与 stage 最后一个 RDD 的 partition 个数相同的 ResultTasks。一个 stage 里面的 task 组成一个 TaskSet，最后调用taskScheduler.submitTasks(taskSet)来提交一整个 taskSet。
 
 4. 这个 taskScheduler 类型是 TaskSchedulerImpl，在 submitTasks() 里面，每一个 taskSet 被包装成 manager: TaskSetMananger，然后交给schedulableBuilder.addTaskSetManager(manager)。schedulableBuilder 可以是 FIFOSchedulableBuilder 或者 FairSchedulableBuilder 调度器。submitTasks() 最后一步是通知backend.reviveOffers()去执行 task，backend 的类型是 SchedulerBackend。如果在集群上运行，那么这个 backend 类型是 SparkDeploySchedulerBackend。
@@ -148,7 +150,10 @@ spark.storage.memoryFraction * spark.storage.safetyFraction * spark.storage.unro
 > 这其中有个优化的点：Join操作时如果两边一边是大表一边是小表的话，则可以用广播变量代替小表，每次只需要map，而不需要Shuffle(shuffle的I/O,网络I/O开销都很大)
 
 ### 广播变量怎么实现？
-> 将变量从Driver发送到Executor(或者Executor到Executor)，而且至多发送一次
+> 将变量从Driver发送到Executor(或者Executor到Executor)，而且至多发送一次。
+
+> 广播变量的实现机制一般有两种，一种是httpBroadCast，另一种是TorrentBroadcast，TorrentBroadcastk可以解决单点网络瓶颈问题。
+
 
 ## 分区器
 > 分区器是用来计算该数据<k, v>将会被分到哪个分区，每个分区对应一个task。其功能有二：
@@ -454,3 +459,7 @@ public int[] poolSample(int[] s, k){
     }
   }
 }
+
+
+## Spark容错机制：Cache和CheckPoint
+> 
