@@ -102,7 +102,7 @@ edits文件存在的目的是为了提高系统的操作效率，NameNode在更�
 > flush的过程比较复杂，其步骤大致如下
 1. 首先，第一个DataNode是以数据包(数据包一般4KB)的形式从客户端接收数据的，DataNode在把数据包写入到本地磁盘的同时会向第二个DataNode（作为副本节点）传送数据。
 2. 在第二个DataNode把接收到的数据包写入本地磁盘时会向第三个DataNode发送数据包
-3. 第三个DataNode开始向本地磁盘写入数据包。此时，数据包以流水线的形式被写入和备份到所有DataNode节点
+3. 第三个DataNode开始向本地磁盘写入数据包。此时，数据包以pipeline的形式被写入和备份到所有DataNode节点
 4. 传送管道中的每个DataNode节点在收到数据后都会向前面那个DataNode发送一个ACK,最终，第一个DataNode会向客户端发回一个ACK
 5. 当客户端收到数据块的确认之后，数据块被认为已经持久化到所有节点。然后，客户端会向NameNode发送一个确认
 6. 如果管道中的任何一个DataNode失败，管道会被关闭。数据将会继续写到剩余的DataNode中。同时NameNode会被告知待备份状态，NameNode会继续备份数据到新的可用的节点
