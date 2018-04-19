@@ -460,6 +460,8 @@ public int[] poolSample(int[] s, k){
   }
 }
 
+## Spark
+> 之所以说Spark是基于内存的分布式计算模型，是因为Executor是个java进程，Executor中90%的safe heap中，有60%作为cache，20%用于shuffle，20%用于计算。可以将数据先缓存在内存里面，下次再用到就不需要进行hdfs的读取了(源头)(类似于一个LRU缓存，但如果溢出了还是会溢写磁盘的。我猜想其内存的计算应该是这个意思)
 
 ## Spark容错机制：Cache和CheckPoint
 > 

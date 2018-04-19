@@ -14,13 +14,14 @@
     > 与HMaster进行通信进行管理表
     > 与HRegionServer进行数据读写
 3. 访问HBase的接口，并维护cache(缓存机制，一般数据库都存在这种机制)加快访问Hbase速度
+
 ### ZooKeeper
 > 主要实现功能
-1. 存储所有HRegion的寻址入口(meta表的Region地址)
+1. 存储所有HRegion的寻址入口(meta表的Region地址) // 查询入口(和Hadoop的NameNode有点像)
 2. 保证任何时候，集群只有一个HMaster,管理HMaster的failover(宕机)  // 监控HMaster
 3. 实时监控HRegionServer的上线下线信息，并通知给HMaster // 监控HRegionServer
-4. 存储Hbase中的schema和表的元数据
-5. Zookeeper Quorum存储表地址、HMaster地址。
+4. 存储Hbase中的schema和表的元数据    // 元数据管理
+5. Zookeeper Quorum存储表地址、HMaster地址。 // 
 
 > 另外，HMaster通过监听ZooKeeper中的Ephemeral节点(默认：/hbase/rs/*)来监控HRegionServer的加入和宕机。在第一个HMaster连接到ZooKeeper时会创建Ephemeral节点(默认：/hbasae/master)来表示Active的HMaster，其后加进来的HMaster则监听该Ephemeral节点，如果当前Active的HMaster宕机，则该节点消失，因而其他HMaster得到通知，而将自身转换成Active的HMaster，在变为Active的HMaster之前，它会创建在/hbase/back-masters/下创建自己的Ephemeral节点 
 
