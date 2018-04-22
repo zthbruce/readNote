@@ -64,3 +64,6 @@
 2. 根据namespace、表名和rowkey在meta表中找到对应的region信息
 3. 找到这个region对应的regionserver, 根据region信息查找对应的region
 4. 先从MemStore找数据，如果没有，再到StoreFile上读(为了读取的效率)。
+
+
+## zookeeper的选举模型
