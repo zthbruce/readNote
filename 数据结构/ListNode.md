@@ -80,6 +80,7 @@
         head.next = null;
         return newHead;
     }
+
 ### 双向链表
 > 遍历链表，只要将链表的两个方向进行调换即可，逻辑上更简单, 只要遍历链表，最后那个节点就是头结点了，也是非常经典的代码
 >
@@ -132,7 +133,7 @@
             fast = fast.next;
             slow = slow.next;
         }
-        return slow; 
+        return slow;
     }
 
 ## 求链表的中间节点
@@ -329,9 +330,10 @@ fast相对于slow的速度为v, 那么追上slow的时间t = s / v <= l / v;
                 return fast;
             }
         }
-        // 如果到达尾节点，默认返回false
+        // 如果到达尾节点，说明不带环
         return null;
     }
+
     // 是否相交
     public boolean isIntersect(ListNode head1, ListNode head2){
         // 取环内节点
@@ -348,6 +350,9 @@ fast相对于slow的速度为v, 那么追上slow的时间t = s / v <= l / v;
         // 两个都带环
         // 绕其中一环一圈
         if(circleNode1 != null && circleNode2 != null){
+            if(circleNode1==circleNode2){
+                return true;
+            }
             ListNode tmp = circleNode1.next;
             // 转一圈
             while(tmp != circleNode1){
@@ -444,6 +449,7 @@ fast相对于slow的速度为v, 那么追上slow的时间t = s / v <= l / v;
         if(head==null || head.next = null){
             return head;
         }
+        // 双指针法，遇到不相同的就将其插入
         ListNode prev = head;
         ListNode tmp = head;
         while(tmp != null){
@@ -456,7 +462,9 @@ fast相对于slow的速度为v, 那么追上slow的时间t = s / v <= l / v;
         prev.next = null; // 最后一个节点指向->null
         return head;
     }
+
 ### 将重复节点也一同删除
+> 递归的解法简直是666
     public ListNode deleteDuplicate(ListNode head){
         // abnormal situation
         if(head==null || head.next == null){

@@ -52,9 +52,10 @@ public class TreeNode{
 * 后序遍历
 > 广度优先遍历，也称为层次遍历，将同一层的节点访问结束之后再访问下一层节点
 > 深度优先遍历通常使用递归的方式理解，广度优先遍历通常使用队列的方式进行
+
 ### 先序遍历
 > 先访问根节点，再依次访问左子树，右子树(本身就是递归的想法)，递归必须要有终止条件
->
+> 
     public void preOrder(TreeNode root){
         // 终止条件
         if(root==null){
@@ -64,9 +65,11 @@ public class TreeNode{
         preOrder(root.left);
         preOrder(root.right);
     }
+
 > 非递归方式？理解如何解决该问题，而非死记硬背，还要看是否有意义，其实意义不大
 > 以前写获取所有的geohash本质上就是先序遍历的方式
 > 只不过邻居可以看成K叉树，利用循环的方式递归所有子树
+
 ### 中序遍历
 > 先访问左子树，再访问根节点，后访问右子树
 >
@@ -96,7 +99,7 @@ public class TreeNode{
 > 可以借助于队列这种数据结构存储每一层的节点
 > 初始化将根节点存入队列Q
 > 当队列Q不空的时候，弹出第一个节点作为访问节点，将该值的左右子节点入队，直到队列为空，即访问结束
->
+> 
     public void levelVisit(TreeNode root){
         // 异常处理
         if(root == null){
@@ -149,7 +152,7 @@ public class TreeNode{
         if(root.left == null || root.right == null){
             return left + right + 1;
         }
-        return Math.min(minDepth(root.left), minDepath(root.right)) + 1; // 往上什一层
+        return Math.min(left, right) + 1; // 往上什一层
     }
 
 ## 求二叉树的节点个数
@@ -189,7 +192,7 @@ public class TreeNode{
         if(root == null || k < 1){
             return 0;
         }
-        // 终止条件
+        // 终止条件，当走k-1步即可
         if(k == 1){
             return 1;
         }
@@ -218,6 +221,7 @@ public class TreeNode{
         return false;
     }
 > 上面不是一个好的算法，因为会重复的计算很多次深度，可以改造计算深度算法来进行优化
+
 >  
     // 如果平衡就返回深度，如果不平衡就返回-1
     public int maxDepth2(TreeNode node){
@@ -328,7 +332,7 @@ public class TreeNode{
 
 ## 生成镜像二叉树
 > 类似于递归遍历，然后将左右子树左右互换
->
+> 
     public TreeNode mirrorTree(TreeNode root){
         // 如果根节点为空
         if(root == null){
@@ -341,6 +345,7 @@ public class TreeNode{
         root.right = right;
         return root; // 返回根节点
     }
+
 ## 二叉查找树的查询
 > 二叉查找树中，左子树恒小于根节点，右子树恒大于根节点，以此查找条件
 > root为二叉查找树，val为待查找值
@@ -362,6 +367,7 @@ public class TreeNode{
         }
         return null;
     }
+
 ## 二叉查找树插入节点
 > 二叉查找树节点插入过程类似于查找，实际上写入的过程本身就包括，寻址(查找) + 插入内容
 > 返回结果：是否插入成功
@@ -454,7 +460,7 @@ public class TreeNode{
     }
 
 > 如果引入数据结构，将深度保存下来，便可以在递归的时候就计算子树的深度，max(left.depth， right.depth) + 1
->
+> 
     public class Result{
         int maxDepth;
         int maxDistance;
@@ -464,6 +470,8 @@ public class TreeNode{
             this.maxDistance = distance; 
         }
     }
+
+
 > 改进后的算法
 >
     public int maxDistance(TreeNode root){
@@ -586,7 +594,7 @@ public class TreeNode{
         }
         // 递归右子树
         if(result == null && root.right!=null){
-            result = inOrder(root.left, k);
+            result = inOrder(root.right, k);
         }
         return result;
     }

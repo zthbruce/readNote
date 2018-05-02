@@ -95,30 +95,30 @@ String(char[] value, boolean share) {
 如果原数组不回收，会导致严重的内存泄露
 
 ## 重写了equal方法
->
+> 
 public boolean equals(Object anObject) {
-        // 如果引用相同，必然相同
-        if (this == anObject) {
+    // 如果引用相同，必然相同
+    if (this == anObject) {
+        return true;
+    }
+    // 如果是字符串类型，那么逐个比较字符数组的每个字符
+    if (anObject instanceof String) {
+        String anotherString = (String) anObject;
+        int n = value.length;
+        if (n == anotherString.value.length) {
+            char v1[] = value;
+            char v2[] = anotherString.value;
+            int i = 0;
+            while (n-- != 0) {
+                if (v1[i] != v2[i])
+                        return false;
+                i++;
+            }
             return true;
         }
-        // 如果是字符串类型，那么逐个比较字符数组的每个字符
-        if (anObject instanceof String) {
-            String anotherString = (String) anObject;
-            int n = value.length;
-            if (n == anotherString.value.length) {
-                char v1[] = value;
-                char v2[] = anotherString.value;
-                int i = 0;
-                while (n-- != 0) {
-                    if (v1[i] != v2[i])
-                            return false;
-                    i++;
-                }
-                return true;
-            }
-        }
-        return false;
     }
+    return false;
+}
 
 ## KMP算法
 > 这个算法是字符串匹配中非常经典的算法，将字符串的匹配从O(N*M)复杂度减少至O(N+M)
