@@ -1,0 +1,24 @@
+# 中国进口预测
+T0414_statistic_forecast_import_product
+T0414_statistic_forecast_import_region
+(其实上面两者可由下面group_sum计算而来)
+T0414_statistic_forecast_import_region_product
+
+字段
+# 以周五18:30分作为起点
+# 预测未来四周的情况(v1~v4)
+区域, 产品, v1, v2, v3, v4
+# 出口到中国预测
+T0414_statistic_forecast_export_product
+T0414_statistic_forecast_export_region
+T0415_statistic_forecast_export_country_product
+字段
+# 预测未来四周的情况(v1~v4)
+国家, 产品, v1, v2, v3, v4
+
+# 描述从历史开始到未来四周的进口量
+T0416_statistic_week_history_import_shipping
+date为每周的周五
+字段:
+date, routeID, 等价物, 艘次, 吨位
+
